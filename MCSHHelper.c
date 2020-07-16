@@ -293,6 +293,15 @@ void getRArray(const double *x, const double *y, const double *z, double *result
 	}
 }
 
+void polyArray(const double *x, const int powX, const double a, double *result, const int size)
+{
+	int i = 0;
+	for (i = 0; i < size; i++)
+	{
+		result[i] = a * pow(x[i], powX);
+	}
+}
+
 void polyXYZArray(const double *x, const double *y, const double *z, const int powX, const int powY, const int powZ, const double a, double *result, const int size)
 {
 	int i = 0;
@@ -735,4 +744,140 @@ void writeMatToFile(const char *filename, const double *data, const int dimX, co
 
 
 	fclose(output_fp);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+void getMainParameter(const double rStepsize, const double rMaxCutoff, const int maxOrder, const int length, double* rCutoffList, int* lList, int* groupList)
+{
+	// length
+	// int length = getDescriptorListLength(rStepsize, rMaxCutoff, maxOrder)
+	int numGroup = getNumGroup(maxOrder);
+	int numRCutoff = getNumRCutoff(rStepsize, rMaxCutoff);
+
+	int i, j, index = 0;
+
+	for (i = 0; i < numGroup; i++)
+	{
+		for (j = 0; j < numRCutoff; j++)
+		{
+			rCutoffList[index] = (j+1) * rStepsize;
+			lList[index] = getCurrentLNumber(i);
+			groupList[index] = getCurrentGroupNumber(i);
+			index++;
+		}
+	}
+
+
+}
+
+int getNumRCutoff(const double rStepsize, const double rMaxCutoff)
+{
+	return (int) ceil(rMaxCutoff / rStepsize);
+}
+
+int getNumGroup(const int maxOrder)
+{
+	int numGroupList[5] = {1,1,2,3,4};
+	if (maxOrder > 4) die("\n Error: Maximum Order Not Implemented \n");
+
+	int numGroup=0;
+	int i;
+	for (i = 0; i < maxOrder + 1; i++)
+	{
+		numGroup += numGroupList[i];
+	}
+	
+	return numGroup;
+}
+
+int getDescriptorListLength(const double rStepsize, const double rMaxCutoff, const int maxOrder)
+{
+
+	int numGroup = getNumGroup(maxOrder);
+	// printf("\nnumber groups:%d \n", numGroup);
+
+	int numRCutoff = getNumRCutoff(rStepsize, rMaxCutoff);
+	// printf("\nnumber r cutoff:%d \n", numRCutoff);
+
+	return numGroup * numRCutoff;
+
+}
+
+int getCurrentGroupNumber(const int currentIndex)
+{	
+	// 1 --> 1
+	// 2 --> 1
+	// 3 --> 1
+	// 4 --> 2
+	// 5 --> 1
+	// 6 --> 2
+	// 7 --> 3
+	// 8 --> 1
+	// 9 --> 2
+	// 10 --> 3
+	// 11 --> 4
+
+
+	int resultList[11] = {1,1,1,2,1,2,3,1,2,3,4};
+	return resultList[currentIndex];
+
+
+
+
+	// int numGroupList[5] = {1,1,2,3,4};
+	// int L = 0, groupNumber = currentIndex, currentTotalGroups = 0, indexCursor = currentIndex;
+
+	// int i;
+	// for (i = 0; i < 5; i++)
+	// {
+	// 	indexCursor -= numGroupList[i];
+	// 	if (indexCursor >= 0) 
+	// 		groupNumber -= numGroupList[i];
+	// }
+
+	// return groupNumber+1;
+}
+
+
+int getCurrentLNumber(const int currentIndex)
+{	
+	// 1 --> 0
+	// 2 --> 1
+	// 3 --> 2
+	// 4 --> 2
+	// 5 --> 3
+	// 6 --> 3
+	// 7 --> 3
+	// 8 --> 4
+	// 9 --> 4
+	// 10 --> 4
+	// 11 --> 4
+
+	int resultList[11] = {0,1,2,2,3,3,3,4,4,4,4};
+	return resultList[currentIndex];
+
+
+	// int numGroupList[5] = {1,1,2,3,4};
+	// int L = 0, indexCursor = currentIndex;
+
+	// int i;
+	// for (i = 0; i < 5; i++)
+	// {
+	// 	indexCursor -= numGroupList[i];
+	// 	if (indexCursor > 0) 
+	// 		L++;
+		
+	// }
+
+	// return L;
 }

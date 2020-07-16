@@ -455,6 +455,7 @@ void MaxwellCartesianSphericalHarmonics(const double *x, const double *y, const 
 
 		default:
 			printf("\nWARNING: l is not valid %d \n", l);
+			break;
 	}
 
 	//int i;
@@ -1065,10 +1066,11 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 			}
 
 			break;
-			break;
+			
 
 		default:
 			die("\nERROR: l is not valid\n");
+			break;
 	}
 
 	char convolveResultFilename[128];
@@ -1099,7 +1101,7 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 
 double scoreTask(const double rCutoff, const int l, const int group)
 {
-	int result;
+	double result;
 	switch (l) 
 	{
 		case 0:
@@ -1192,6 +1194,7 @@ double scoreTask(const double rCutoff, const int l, const int group)
 		default:
 			printf("\n***** WARNING: l not valid *****\n");
 			result = 1;
+			break;
 
 	}
 
@@ -1201,7 +1204,237 @@ double scoreTask(const double rCutoff, const int l, const int group)
 
 
 
+void LegendrePolynomial(const double *x, const double *y, const double *z, const int polynomialOrder, const double rCutoff, double *result, const int size)
+{
+	// (2*r_array-r)/r
+	double *r = calloc( size, sizeof(double));
+	getRArray(x, y, z, r, size);
 
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		r[i] = (2.0 * r - rCutoff) / rCutoff;
+	}
+
+	switch (polynomialOrder) 
+	{
+		case 0:
+			// 1
+			for ( i = 0; i < size; i++)
+			{
+				result[i] = 1.0;
+			}
+			break;
+
+		case 1:
+			//r
+			for ( i = 0; i < size; i++)
+			{
+				result[i] = r[i];
+			}
+			break;
+
+		case 2:
+			// 0.5 * (3*x*x - 1)
+			double *temp1 = malloc( size * sizeof(double));
+
+			polyArray(r, 2, 3.0, temp1, size);
+
+			addScalarVector(temp1, -1.0, result, size);
+			multiplyScalarVector(result, 0.5, result, size);
+
+			free(temp1);
+			break;
+
+		case 3:
+			// 0.5 * (5*x*x*x - 3x)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+
+			polyArray(r, 3, 5.0, temp1, size);
+
+			multiplyScalarVector(r, -3.0, temp2, size);
+
+			addVector(temp1, temp2, result, size);
+			multiplyScalarVector(result, 0.5, result, size);
+
+			free(temp1);
+			free(temp2);
+			break;
+
+		case 4:
+			// (1/8) * (35*x*x*x*x - 30*x*x +3)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+
+			polyArray(r, 4, 35.0, temp1, size);
+			polyArray(r, 2, -30.0, temp2, size);
+
+			addVector(temp1, temp2, result, size);
+			addScalarVector(result, 3.0, result, size);
+			multiplyScalarVector(result, (1.0/8.0), result, size);
+
+			free(temp1);
+			free(temp2);
+			break;
+
+		case 5:
+			// (1/8) * (63*x*x*x*x*x - 70*x*x*x + 15*x)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+			double *temp3 = malloc( size * sizeof(double));
+
+			polyArray(r, 5, 63.0, temp1, size);
+			polyArray(r, 3, -70.0, temp2, size);
+			multiplyScalarVector(r, 15.0, temp3, size);
+
+			addVector(temp1, temp2, result, size);
+			addVector(result, temp3, result, size);
+			multiplyScalarVector(result, (1.0/8.0), result, size);
+
+			free(temp1);
+			free(temp2);
+			free(temp3);
+			break;
+
+		case 6:
+			// (1/16) * (231*x*x*x*x*x*x - 315*x*x*x*x + 105*x*x -5)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+			double *temp3 = malloc( size * sizeof(double));
+
+			polyArray(r, 6, 231.0, temp1, size);
+			polyArray(r, 4, -315.0, temp2, size);
+			polyArray(r, 2, 105.0, temp3, size);
+
+			addVector(temp1, temp2, result, size);
+			addVector(result, temp3, result, size);
+			addScalarVector(result, -5.0, result, size);
+			multiplyScalarVector(result, (1.0/16.0), result, size);
+
+			free(temp1);
+			free(temp2);
+			free(temp3);
+			break;
+
+		case 7:
+			// (1/16) * (429*x*x*x*x*x*x*x - 693*x*x*x*x*x + 315*x*x*x - 35*x)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+			double *temp3 = malloc( size * sizeof(double));
+			double *temp4 = malloc( size * sizeof(double));
+
+			polyArray(r, 7, 231.0, temp1, size);
+			polyArray(r, 5, -315.0, temp2, size);
+			polyArray(r, 3, 105.0, temp3, size);
+			multiplyScalarVector(r, 15.0, temp4, size);
+
+			addVector(temp1, temp2, result, size);
+			addVector(result, temp3, result, size);
+			addVector(result, temp4, result, size);
+			multiplyScalarVector(result, (1.0/16.0), result, size);
+
+			free(temp1);
+			free(temp2);
+			free(temp3);
+			free(temp4);
+			break;
+
+		case 8:
+			// (1/128) * (6435*x**8 - 12012*x**6 + 6930*x**4 - 1260*x*2 + 35)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+			double *temp3 = malloc( size * sizeof(double));
+			double *temp4 = malloc( size * sizeof(double));
+
+			polyArray(r, 8, 6435.0, temp1, size);
+			polyArray(r, 6, -12012.0, temp2, size);
+			polyArray(r, 4, 6930.0, temp3, size);
+			polyArray(r, 2, -1260.0, temp4, size);
+
+			addVector(temp1, temp2, result, size);
+			addVector(result, temp3, result, size);
+			addVector(result, temp4, result, size);
+			addScalarVector(result, 35.0, result, size);
+			multiplyScalarVector(result, (1.0/128.0), result, size);
+
+			free(temp1);
+			free(temp2);
+			free(temp3);
+			free(temp4);
+			break;
+
+		case 9:
+			// (1/128) * (12155*x**9 - 25740*x**7 + 18018*x**5 - 4620*x**3 + 315x)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+			double *temp3 = malloc( size * sizeof(double));
+			double *temp4 = malloc( size * sizeof(double));
+			double *temp5 = malloc( size * sizeof(double));
+
+			polyArray(r, 9, 12155.0, temp1, size);
+			polyArray(r, 7, -25740.0, temp2, size);
+			polyArray(r, 5, 18018.0, temp3, size);
+			polyArray(r, 3, -4620.0, temp4, size);
+			multiplyScalarVector(r, 315.0, temp5, size);
+
+			addVector(temp1, temp2, result, size);
+			addVector(result, temp3, result, size);
+			addVector(result, temp4, result, size);
+			addVector(result, temp5, result, size);
+			multiplyScalarVector(result, (1.0/128.0), result, size);
+
+			free(temp1);
+			free(temp2);
+			free(temp3);
+			free(temp4);
+			free(temp5);
+			break;
+
+		case 10:
+			// (1/256) * (46189*x**10 - 109395*x**8 + 90090*x**6 - 30030*x**4 + 3465*x**2 -63)
+			double *temp1 = malloc( size * sizeof(double));
+			double *temp2 = malloc( size * sizeof(double));
+			double *temp3 = malloc( size * sizeof(double));
+			double *temp4 = malloc( size * sizeof(double));
+			double *temp5 = malloc( size * sizeof(double));
+
+			polyArray(r, 10, 46189.0, temp1, size);
+			polyArray(r, 8, -109395.0, temp2, size);
+			polyArray(r, 6, 90090.0, temp3, size);
+			polyArray(r, 4, 30030.0, temp4, size);
+			polyArray(r, 2, 3465.0, temp5, size);
+
+			addVector(temp1, temp2, result, size);
+			addVector(result, temp3, result, size);
+			addVector(result, temp4, result, size);
+			addVector(result, temp5, result, size);
+			addScalarVector(result, -63.0, result, size);
+			multiplyScalarVector(result, (1.0/256.0), result, size);
+
+			free(temp1);
+			free(temp2);
+			free(temp3);
+			free(temp4);
+			free(temp5);
+			break;
+
+		default:
+
+			break;
+	}
+
+	for (i = 0; i < size; i++)
+	{	
+		if (r[i] > rCutoff)
+		{
+			result[i] = 0.0;
+		}
+	}
+
+	free(r);
+
+}
 
 
 

@@ -17,7 +17,58 @@
 #include "MCSHDescriptorMain.h"
 
 
+int main(int argc, char *argv[])
+{
+	MPI_Init(&argc,&argv);
+	int world_rank, world_size;
 
+	double start = MPI_Wtime();
+
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+	int numProcPerRow = 1;
+	int color = world_rank  / numProcPerRow; // Determine color based on row
+
+	// Split the communicator based on the color and use the
+	// original rank for ordering
+	MPI_Comm row_comm;
+	MPI_Comm_split(MPI_COMM_WORLD, color, world_rank, &row_comm);
+
+	int numParallelComm = world_size / numProcPerRow;
+
+	int imageDimX = 60, imageDimY = 60, imageDimZ = 60;
+	double *rho = malloc( imageDimX * imageDimY * imageDimZ * sizeof(double));
+	int ii, imageSize = imageDimX * imageDimY * imageDimZ;
+	double current = 0.0;
+	for (ii = 0; ii < imageSize; ii++)
+	{
+		rho[ii] = current;
+		current += 1.0;
+	}
+
+	double hx = 0.1, hy = 0.1, hz = 0.1;
+	double Uvec[9] = {1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0};
+	double *U = Uvec;
+	int accuracy = 6;
+
+	int MCSHMaxOrder = 3;
+	double MCSHMaxR = 0.6;
+	double MCSHRStepsize = 0.1;
+
+	// printf("\nstart MCSH\n");
+	MCSHDescriptorMain(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, MCSHMaxOrder, MCSHMaxR, MCSHRStepsize, color, numParallelComm, row_comm);
+
+
+
+	double end = MPI_Wtime();
+	printf("\n\n END execution time %10f\n\n", end - start);
+
+	MPI_Finalize();
+	// printf("after MPI finalize\n");
+
+	return 0;
+}
 
 
 int main_set(int argc, char *argv[])
@@ -55,7 +106,7 @@ int main_set(int argc, char *argv[])
 	double *U = Uvec;
 	int accuracy = 6;
 
-	MCSHDescriptorMain(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, color, numParallelComm, row_comm);
+	MCSHDescriptorMainFixed(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, color, numParallelComm, row_comm);
 
 
 
@@ -70,7 +121,7 @@ int main_set(int argc, char *argv[])
 
 
 
-int main(int argc, char *argv[])
+int main_single(int argc, char *argv[])
 {
 	/*printf("start\n");
 	double Uvec[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};

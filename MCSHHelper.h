@@ -34,6 +34,8 @@ void getRArray(const double *x, const double *y, const double *z, double *result
 
 void polyXYZArray(const double *x, const double *y, const double *z, const int powX, const int powY, const int powZ, const double a, double *result, const int size);
 
+void polyArray(const double *x, const int powX, const double a, double *result, const int size);
+
 void applyU(double *X, double *Y, double*Z, const double *U, const int size);
 
 void applyU2(double *X, double *Y, double*Z, const double *U, const int size);
@@ -64,4 +66,14 @@ void writeMatToFile(const char *filename, const double *data, const int dimX, co
 
 int mod(int a, int b);
 
+void getMainParameter(const double rStepsize, const double rMaxCutoff, const int maxOrder, const int length, double* rCutoffList, int* lList, int* groupList);
 
+int getNumRCutoff(const double rStepsize, const double rMaxCutoff);
+
+int getNumGroup(const int maxOrder);
+
+int getDescriptorListLength(const double rStepsize, const double rMaxCutoff, const int maxOrder);
+
+int getCurrentGroupNumber(const int currentIndex);
+
+int getCurrentLNumber(const int currentIndex);
