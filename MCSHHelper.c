@@ -256,6 +256,15 @@ void subtractVector(const double *arr1, const double *arr2, double *result, cons
 	}
 }
 
+void multiplyVector(const double *arr1, const double *arr2, double *result, const int size)
+{
+	int i = 0;
+	for (i = 0; i < size; i++)
+	{
+		result[i] = arr1[i] * arr2[i];
+	}
+}
+
 void divideVector(const double *arr1, const double *arr2, double *result, const int size)
 {
 	int i = 0;
@@ -392,7 +401,7 @@ double calcDv(const double hx, const double hy, const double hz, const int accur
 	Point l2 = {U[3] * hyAcc, U[4] * hyAcc, U[5] * hyAcc};
 	Point l3 = {U[6] * hzAcc, U[7] * hzAcc, U[8] * hzAcc};
 
-	Point crossL2L3 = {l2.y * l3.z - l2.z * l3.y, l2.z * l3.x - l2.x * l3.z, l2.x * l3.z - l2.z * l3.x};
+	Point crossL2L3 = {l2.y * l3.z - l2.z * l3.y, l2.z * l3.x - l2.x * l3.z, l2.x * l3.y - l2.y * l3.x};
 
 	double result = fabs(l1.x * crossL2L3.x + l1.y * crossL2L3.y + l1.z * crossL2L3.z);
 
@@ -411,6 +420,19 @@ double sumArr(const double *arr, const int size)
 	return result;
 
 }
+
+double sumAbsArr(const double *arr, const int size)
+{	
+	double result = 0;
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		result += fabs(arr[i]);
+	}
+	return result;
+
+}
+
 
 
 
@@ -749,19 +771,51 @@ void writeMatToFile(const char *filename, const double *data, const int dimX, co
 
 
 
-
-
-
-
-
-
-
-
-void getMainParameter(const double rStepsize, const double rMaxCutoff, const int maxOrder, const int length, double* rCutoffList, int* lList, int* groupList)
+void getMainParameter_RadialLegendre(const int maxMCSHOrder, const int maxLegendreOrder, const int length, int* LegendreOrderList, int* lList, int* groupList)
 {
 	// length
 	// int length = getDescriptorListLength(rStepsize, rMaxCutoff, maxOrder)
-	int numGroup = getNumGroup(maxOrder);
+	int numGroup = getNumGroup(maxMCSHOrder);
+	int numLegendre = maxLegendreOrder + 1;
+
+	int i, j, index = 0;
+
+	for (i = 0; i < numGroup; i++)
+	{
+		for (j = 0; j < numLegendre; j++)
+		{
+			LegendreOrderList[index] = j;
+			lList[index] = getCurrentLNumber(i);
+			groupList[index] = getCurrentGroupNumber(i);
+			index++;
+		}
+	}
+}
+
+int getDescriptorListLength_RadialLegendre(const int maxLegendreOrder, const int maxMCSHOrder)
+{
+
+	int numGroup = getNumGroup(maxMCSHOrder);
+	// printf("\nnumber groups:%d \n", numGroup);
+
+	int numLegendre = maxLegendreOrder + 1;
+	// printf("\nnumber r cutoff:%d \n", numRCutoff);
+
+	return numGroup * numLegendre;
+
+}
+
+
+
+
+
+
+
+void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder, const int length, double* rCutoffList, int* lList, int* groupList)
+{
+	// length
+	// int length = getDescriptorListLength(rStepsize, rMaxCutoff, maxMCSHOrder)
+	int numGroup = getNumGroup(maxMCSHOrder);
 	int numRCutoff = getNumRCutoff(rStepsize, rMaxCutoff);
 
 	int i, j, index = 0;
@@ -776,34 +830,12 @@ void getMainParameter(const double rStepsize, const double rMaxCutoff, const int
 			index++;
 		}
 	}
-
-
 }
 
-int getNumRCutoff(const double rStepsize, const double rMaxCutoff)
-{
-	return (int) ceil(rMaxCutoff / rStepsize);
-}
-
-int getNumGroup(const int maxOrder)
-{
-	int numGroupList[5] = {1,1,2,3,4};
-	if (maxOrder > 4) die("\n Error: Maximum Order Not Implemented \n");
-
-	int numGroup=0;
-	int i;
-	for (i = 0; i < maxOrder + 1; i++)
-	{
-		numGroup += numGroupList[i];
-	}
-	
-	return numGroup;
-}
-
-int getDescriptorListLength(const double rStepsize, const double rMaxCutoff, const int maxOrder)
+int getDescriptorListLength_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder)
 {
 
-	int numGroup = getNumGroup(maxOrder);
+	int numGroup = getNumGroup(maxMCSHOrder);
 	// printf("\nnumber groups:%d \n", numGroup);
 
 	int numRCutoff = getNumRCutoff(rStepsize, rMaxCutoff);
@@ -812,6 +844,28 @@ int getDescriptorListLength(const double rStepsize, const double rMaxCutoff, con
 	return numGroup * numRCutoff;
 
 }
+
+int getNumRCutoff(const double rStepsize, const double rMaxCutoff)
+{
+	return (int) ceil(rMaxCutoff / rStepsize);
+}
+
+int getNumGroup(const int maxMCSHOrder)
+{
+	int numGroupList[5] = {1,1,2,3,4};
+	if (maxMCSHOrder > 4) die("\n Error: Maximum Order Not Implemented \n");
+
+	int numGroup=0;
+	int i;
+	for (i = 0; i < maxMCSHOrder + 1; i++)
+	{
+		numGroup += numGroupList[i];
+	}
+	
+	return numGroup;
+}
+
+
 
 int getCurrentGroupNumber(const int currentIndex)
 {	

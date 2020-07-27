@@ -50,10 +50,18 @@ void MaxwellCartesianSphericalHarmonics(const double *x, const double *y, const 
 		case 0:
 			//uncutResult = 1;
 			// printf(" l = 0\n");
-			
-			for ( i = 0; i < size; i++)
+
+			if (strcmp(n, "000") == 0) 
 			{
-				result[i] = 1.0;
+				for ( i = 0; i < size; i++)
+				{
+					result[i] = 1.0;
+
+				}
+			} 
+			else
+			{
+				printf("\nWARNING: n is not valid %s \n", n);
 			}
 			break;
 
@@ -470,6 +478,11 @@ void MaxwellCartesianSphericalHarmonics(const double *x, const double *y, const 
 		//printf("after: %10f \n",result[i]);
 	}
 
+	// for (i = 0; i < size; i++)
+	// {
+	// 	printf("x: %10f \t y: %10f \t z: %10f \t r: %10f \t rCutoff: %f \t l: %d \t n: %s \t result: %10f\n", x[i],y[i],z[i], r[i], rCutoff, l, n, result[i]);
+	// }
+
 
 	//free(uncutResult);
 	free(r);
@@ -482,7 +495,8 @@ void MaxwellCartesianSphericalHarmonics(const double *x, const double *y, const 
 
 
 void calculateStencil(const int stencilDimX, const int stencilDimY, const int stencilDimZ, const double hx, const double hy, const double hz, 
-					  const double rCutoff, const int l, const char *n, const double *U, const int accuracy, double *stencil)
+					  const double rCutoff, const int l, const char *n, const int radialFunctionType, const int radialFunctionOrder, 
+					  const double *U, const int accuracy, double *stencil)
 {
 	int pixelEvalArrSize = accuracy * accuracy * accuracy;
 
@@ -494,59 +508,52 @@ void calculateStencil(const int stencilDimX, const int stencilDimY, const int st
 
 	getCentralCoords(hx, hy, hz, accuracy, refX, refY, refZ);
 
-	// printf("after central coords\n");
+	// char stencilRefXFilename[128];
+	// snprintf(stencilRefXFilename, 128, "stencil_RefX_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	// writeMatToFile(stencilRefXFilename, refX, accuracy, accuracy, accuracy);
 
-	// printf("----------X-----------\n");
-	// printArr(refX, pixelEvalArrSize);
-	// printf("----------Y-----------\n");
-	// printArr(refY, pixelEvalArrSize);
-	// printf("----------Z-----------\n");
-	// printArr(refZ, pixelEvalArrSize);
+	// char stencilRefYFilename[128];
+	// snprintf(stencilRefYFilename, 128, "stencil_RefY_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	// writeMatToFile(stencilRefYFilename, refY, accuracy, accuracy, accuracy);
 
+	// char stencilRefZFilename[128];
+	// snprintf(stencilRefZFilename, 128, "stencil_RefZ_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	// writeMatToFile(stencilRefZFilename, refZ, accuracy, accuracy, accuracy);
 
 	int centerX = (stencilDimX - 1)/2;
     int centerY = (stencilDimY - 1)/2;
     int centerZ = (stencilDimZ - 1)/2;
 
-    //double *stencil = calloc( stencilDimX * stencilDimY * stencilDimZ, sizeof(double));
-
 	double *tempXArr = calloc( pixelEvalArrSize, sizeof(double));
 	double *tempYArr = calloc( pixelEvalArrSize, sizeof(double));
 	double *tempZArr = calloc( pixelEvalArrSize, sizeof(double));
 	double *tempMCSHResult = calloc( pixelEvalArrSize, sizeof(double));
+	double *tempRadialResult = calloc( pixelEvalArrSize, sizeof(double));
 	double xOffset, yOffset, zOffset;
 	int i, j, k, index = 0, m;
 	for (k = 0; k < stencilDimZ; k++){
 		for ( j = 0; j < stencilDimY; j++) {
 			for ( i = 0; i < stencilDimX; i++) {
-				// printf("start %d %d %d\n", i,j,k);
+				//printf("start %d %d %d\n", i,j,k);
 				xOffset = (i-centerX) * hx;
 				yOffset = (j-centerY) * hy;
 				zOffset = (k-centerZ) * hz;
 				//index = k * stencilDimX * stencilDimY + j * stencilDimX + i;
 
-
 				addScalarVector(refX, xOffset, tempXArr, pixelEvalArrSize);
 				addScalarVector(refY, yOffset, tempYArr, pixelEvalArrSize);
 				addScalarVector(refZ, zOffset, tempZArr, pixelEvalArrSize);
 
-				// printf("\n\nX_offset: %10f \t Y_offset: %10f \t Z_offset: %10f \n",xOffset,yOffset,zOffset);
-				// for (m = 0; m < pixelEvalArrSize; m++)
-				// {
-				// 	printf("refx: %10f \t refy: %10f \t refz: %10f \t x: %10f \t y: %10f \t z: %10f \n", refX[m],refY[m],refZ[m],tempXArr[m],tempYArr[m],tempZArr[m]);
-				// }
-
 				applyU2(tempXArr, tempYArr, tempZArr, U, pixelEvalArrSize);
-
-				// for (m = 0; m < pixelEvalArrSize; m++)
-				// {
-				// 	printf("refx: %10f \t refy: %10f \t refz: %10f \t Ux: %10f \t Uy: %10f \t Uz: %10f \n", refX[m],refY[m],refZ[m],tempXArr[m],tempYArr[m],tempZArr[m]);
-				// }
-				
-
 				MaxwellCartesianSphericalHarmonics(tempXArr, tempYArr, tempZArr, l, n, rCutoff, tempMCSHResult, pixelEvalArrSize);
 
+				if (radialFunctionType == 2)
+				{
+					LegendrePolynomial(tempXArr, tempYArr, tempZArr, radialFunctionOrder, rCutoff, tempRadialResult, pixelEvalArrSize);
+					multiplyVector(tempMCSHResult, tempRadialResult, tempMCSHResult, pixelEvalArrSize);
+				}
 				//stencil[index] = cblas_dasum(pixelEvalArrSize, tempMCSHResult, 1) * dv;
+				//printf("start %d %d %d \t sum: %f \t sumAbs: %f \t dv: %f\n", i,j,k, sumArr(tempMCSHResult, pixelEvalArrSize), sumAbsArr(tempMCSHResult, pixelEvalArrSize), dv);
 				stencil[index] = sumArr(tempMCSHResult, pixelEvalArrSize) * dv;
 				index++;
 			}
@@ -563,7 +570,8 @@ void calculateStencil(const int stencilDimX, const int stencilDimY, const int st
 
 
 void calcStencilAndConvolveAndAddResult(const double *image, const int imageDimX, const int imageDimY, const int imageDimZ, const double hx, const double hy, const double hz, 
-										const double rCutoff, const int l, const char *n, const double *U, const int accuracy, double *convolveResult)
+										const double rCutoff, const int l, const char *n, const int radialFunctionType, const int radialFunctionOrder, 
+										const double *U, const int accuracy, double *convolveResult)
 {
 	double start_t, end_stencil_t, end_convolve_t, end_convolve2_t; 
 	//time(&start_t); 
@@ -576,41 +584,16 @@ void calcStencilAndConvolveAndAddResult(const double *image, const int imageDimX
 
 	double *stencil = calloc( stencilDimX * stencilDimY * stencilDimZ, sizeof(double));
 	calculateStencil(stencilDimX, stencilDimY, stencilDimZ, hx, hy, hz, 
-					 rCutoff, l, n, U, accuracy, stencil);
+					 rCutoff, l, n, radialFunctionType, radialFunctionOrder, U, accuracy, stencil);
+
+
+	// char stencilFilename[128];
+	// snprintf(stencilFilename, 128, "stencil_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	// writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
 
 	// printf("end stencil calculation \n");
 	// time(&end_stencil_t); 
 	end_stencil_t  = MPI_Wtime();
-
-	// char DensFilename[128];
-
-	// snprintf(DensFilename, 128, "Sparc_stencil_%f_%d_%s.csv", rCutoff, l,n);
-	// FILE *output_fp_stencil = fopen(DensFilename,"w");
-
-	// int i, j, k, index;
-	// for (k = 0; k < stencilDimZ; k++){
-	// 	// printf("\n\n------------k = %d ------------\n", k);
-	// 	for ( j = 0; j < stencilDimY; j++) {
-	// 		for ( i = 0; i < stencilDimX; i++) {
-	// 			index = k * stencilDimX * stencilDimY + j * stencilDimX + i;
-	// 			fprintf(output_fp_stencil,"%d,%d,%d,%.15f\n",i,j,k,stencil[index]);
-	// 			// printf("%10.8f\t",stencil[index]);
-	// 		}
-	// 		// printf("\n");
-	// 	}
-
-	// }
-
-	// fclose(output_fp_stencil);
-
-
-
-	// int imageSize = imageDimX * imageDimY * imageDimZ;
-	// double *convolveResult2 = malloc( imageDimX * imageDimY * imageDimZ * sizeof(double));
-	// for ( i = 0; i < imageSize; i++)
-	// {
-	// 	convolveResult2[i] = 0.0;
-	// }
 
 
 	convolve3(image, stencil, imageDimX, imageDimY, imageDimZ, stencilDimX, stencilDimY, stencilDimZ, convolveResult);
@@ -620,22 +603,13 @@ void calcStencilAndConvolveAndAddResult(const double *image, const int imageDimX
 
 	printf("\n r: %f \t l: %d \t n: %s \t total_time: %f \t stencil: %f \t convolve: %f \n",rCutoff, l, n,end_convolve_t - start_t, end_stencil_t - start_t, end_convolve_t - end_stencil_t);
 
-	// convolve2(image, stencil, imageDimX, imageDimY, imageDimZ, stencilDimX, stencilDimY, stencilDimZ, convolveResult2);
-	// time(&end_convolve2_t); 
-	// printf("end convolve2 \n");
-	// printf("\n total_time: %ld \t stencil: %ld \t convolve: %ld \t convolve2: %ld \n",end_convolve_t - start_t, end_stencil_t - start_t, end_convolve_t - end_stencil_t, end_convolve2_t - end_convolve_t);
-
-	// for ( i = 0; i < 100; i++)
-	// {
-	// 	printf("result1: %15f \t result2: %15f \n", convolveResult[i], convolveResult2[i]);
-	// }
-
 	free(stencil);
 }
 
 
 void calcStencilAndConvolveAndSave(const double *image, const int imageDimX, const int imageDimY, const int imageDimZ, const double hx, const double hy, const double hz, 
-								   const double rCutoff, const int l, const char *n, const double *U, const int accuracy, const int stencilIndex)
+								   const double rCutoff, const int l, const char *n, const int radialFunctionType, const int radialFunctionOrder, 
+								   const double *U, const int accuracy, const int stencilIndex)
 {
 	int pixelEvalArrSize = accuracy * accuracy * accuracy;
 
@@ -646,7 +620,7 @@ void calcStencilAndConvolveAndSave(const double *image, const int imageDimX, con
 
 	double *stencil = calloc( stencilDimX * stencilDimY * stencilDimZ, sizeof(double));
 	calculateStencil(stencilDimX, stencilDimY, stencilDimZ, hx, hy, hz, 
-					 rCutoff, l, n, U, accuracy, stencil);
+					 rCutoff, l, n, radialFunctionType, radialFunctionOrder, U, accuracy, stencil);
 
 	
 
@@ -657,33 +631,6 @@ void calcStencilAndConvolveAndSave(const double *image, const int imageDimX, con
 
 	writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
 
-	// FILE *output_fp_stencil = fopen(DensFilename,"w");
-	// if (output_fp_stencil == NULL) {
-	// 	printf("\nCannot open file \"%s\"\n",DensFilename);
-	// 	die("cant open file");
-	// }
-
-	// int i, j, k, index;
-	// for (k = 0; k < stencilDimZ; k++){
-	// 	// printf("\n\n------------k = %d ------------\n", k);
-	// 	for ( j = 0; j < stencilDimY; j++) {
-	// 		for ( i = 0; i < stencilDimX; i++) {
-	// 			index = k * stencilDimX * stencilDimY + j * stencilDimX + i;
-	// 			fprintf(output_fp_stencil,"%d,%d,%d,%22f\n",i,j,k,stencil[index]);
-	// 			// printf("%10.8f\t",stencil[index]);
-	// 		}
-	// 		// printf("\n");
-	// 	}
-
-	// }
-
-	// fclose(output_fp_stencil);
-
-
-
-
-
-	// printf("end calculating stencil\n");
 
 	int imageSize = imageDimX * imageDimY * imageDimZ;
 	double *convolveResult = calloc( imageDimX * imageDimY * imageDimZ, sizeof(double));
@@ -696,31 +643,12 @@ void calcStencilAndConvolveAndSave(const double *image, const int imageDimX, con
 
 	writeMatToFile(convolveResultFilename, convolveResult, imageDimX, imageDimY, imageDimZ);
 
-	// FILE *output_fp = fopen(convolveResultFilename,"w");
-	// if (output_fp == NULL) {
-	// 	printf("\nCannot open file \"%s\"\n",convolveResultFilename);
-	// 	die("cant open file");
-	// }
-
-	// index = 0;
-	// for (k = 0; k < imageDimZ; k++){
-	// 	for ( j = 0; j < imageDimY; j++) {
-	// 		for ( i = 0; i < imageDimX; i++) {
-	// 			// index = k * imageDimX * imageDimY + j * imageDimX + i;
-	// 			fprintf(output_fp,"%d,%d,%d,%10f,%10f\n",i,j,k,convolveResult[index],image[index]);
-	// 			index ++;
-	// 			//printf("write line %d  %d  %d\n", i, j, k, convolveResult);
-	// 		}
-	// 	}
-	// }
-
-	// fclose(output_fp);
-
 	free(convolveResult);
 }
 
 
-void calcStencilAndSave(const double hx, const double hy, const double hz, const double rCutoff, const int l, const char *n, const double *U, const int accuracy, const int stencilIndex)
+void calcStencilAndSave(const double hx, const double hy, const double hz, const double rCutoff, const int l, const char *n, const double *U, 
+						const int radialFunctionType, const int radialFunctionOrder, const int accuracy, const int stencilIndex)
 {	
 	int pixelEvalArrSize = accuracy * accuracy * accuracy;
 
@@ -731,35 +659,14 @@ void calcStencilAndSave(const double hx, const double hy, const double hz, const
 
 	double *stencil = calloc( stencilDimX * stencilDimY * stencilDimZ, sizeof(double));
 	calculateStencil(stencilDimX, stencilDimY, stencilDimZ, hx, hy, hz, 
-					 rCutoff, l, n, U, accuracy, stencil);
+					 rCutoff, l, n, radialFunctionType, radialFunctionOrder, U, accuracy, stencil);
 
 
 	// printf("after stencil calculation");
 	char stencilFilename[128];
 	snprintf(stencilFilename, 128, "%s_%d.csv", "test_output", stencilIndex);
 	writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
-	// printf(DensFilename);
 
-	// FILE *output_fp = fopen(DensFilename,"w");
-	// if (output_fp == NULL) {
-	// 	printf("\nCannot open file \"%s\"\n",DensFilename);
-	// 	die("cant open file");
-	// }
-
-	// int i, j, k, index = 0;
-	// for (k = 0; k < stencilDimZ; k++){
-	// 	printf("\n\n------------k = %d ------------\n", k);
-	// 	for ( j = 0; j < stencilDimY; j++) {
-	// 		for ( i = 0; i < stencilDimX; i++) {
-	// 			index = k * stencilDimX * stencilDimY + j * stencilDimX + i;
-	// 			fprintf(output_fp,"%d,%d,%d,%22f\n",i,j,k,stencil[index]);
-	// 			printf("%10.8f\t",stencil[index]);
-	// 		}
-	// 		printf("\n");
-	// 	}
-	// }
-
-	// fclose(output_fp);
 	free(stencil);
 }
 
@@ -770,7 +677,7 @@ void calcStencilAndSave(const double hx, const double hy, const double hz, const
 
 
 void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const int imageDimY, const int imageDimZ, const double hx, const double hy, const double hz, 
-							   const double rCutoff, const int l, const int group, const double *U, const int accuracy)
+							   const double rCutoff, const int l, const int group, const int radialFunctionType, const int radialFunctionOrder, const double *U, const int accuracy)
 {	
 	int imageSize = imageDimX * imageDimY * imageDimZ;
 	double *featureVector = calloc( imageSize, sizeof(double));
@@ -780,7 +687,7 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 	{
 		case 0:
 			if (group == 1){
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "000", U, accuracy, featureVector);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "000", radialFunctionType, radialFunctionOrder, U, accuracy, featureVector);
 			}
 			else{
 				die("\nERROR: group number is not valid\n");
@@ -795,15 +702,9 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "100", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "010", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "001", U, accuracy, component3);
-
-				// printf("\n-------- components before power ------------\n")
-				// for ( i = 0; i < imageSize; i++)
-				// {
-				// 	printf("")
-				// }
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "100", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "010", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "001", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -832,9 +733,9 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "200", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "020", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "002", U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "200", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "020", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "002", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -855,9 +756,9 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "110", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "101", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "011", U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "110", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "101", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "011", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -886,9 +787,9 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "300", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "030", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "003", U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "300", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "030", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "003", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -912,12 +813,12 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component5 = calloc( imageSize, sizeof(double));
 				double *component6 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "210", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "201", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "021", U, accuracy, component3);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "120", U, accuracy, component4);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "102", U, accuracy, component5);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "012", U, accuracy, component6);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "210", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "201", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "021", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "120", radialFunctionType, radialFunctionOrder, U, accuracy, component4);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "102", radialFunctionType, radialFunctionOrder, U, accuracy, component5);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "012", radialFunctionType, radialFunctionOrder, U, accuracy, component6);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -943,7 +844,7 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 			}
 			else if (group == 3)
 			{
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "111", U, accuracy, featureVector);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "111", radialFunctionType, radialFunctionOrder, U, accuracy, featureVector);
 			}
 			else
 			{
@@ -959,9 +860,9 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "400", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "040", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "004", U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "400", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "040", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "004", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -985,12 +886,12 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component5 = calloc( imageSize, sizeof(double));
 				double *component6 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "310", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "301", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "031", U, accuracy, component3);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "130", U, accuracy, component4);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "103", U, accuracy, component5);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "013", U, accuracy, component6);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "310", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "301", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "031", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "130", radialFunctionType, radialFunctionOrder, U, accuracy, component4);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "103", radialFunctionType, radialFunctionOrder, U, accuracy, component5);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "013", radialFunctionType, radialFunctionOrder, U, accuracy, component6);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -1020,9 +921,9 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "220", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "202", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "022", U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "220", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "202", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "022", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -1043,9 +944,9 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "211", U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "121", U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "112", U, accuracy, component3);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "211", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "121", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "112", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
@@ -1075,26 +976,17 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 
 	char convolveResultFilename[128];
 
-	snprintf(convolveResultFilename, 128, "%s_%d_%d_%f.csv", "MCSH_feature", l, group, rCutoff);
+	if (radialFunctionType == 1)
+	{
+		snprintf(convolveResultFilename, 128, "%s_%d_%d_%f.csv", "MCSH_feature", l, group, rCutoff);
+	}
+	else if (radialFunctionType == 2)
+	{
+		snprintf(convolveResultFilename, 128, "%s_%d_%d_%f_Legendre_%d.csv", "MCSH_feature", l, group, rCutoff, radialFunctionOrder);
+	}
+	
 	// printf(DensFilename);
 	writeMatToFile(convolveResultFilename, featureVector, imageDimX, imageDimY, imageDimZ);
-
-	// FILE *output_fp = fopen(DensFilename,"w");
-	// if (output_fp == NULL) {
-	// 	printf("\nCannot open file \"%s\"\n",DensFilename);
-	// 	die("cant open file");
-	// }
-	// int index;
-	// for (k = 0; k < imageDimZ; k++){
-	// 	for ( j = 0; j < imageDimY; j++) {
-	// 		for ( i = 0; i < imageDimX; i++) {
-	// 			index = k * imageDimX * imageDimY + j * imageDimX + i;
-	// 			fprintf(output_fp,"%d,%d,%d,%.12f\n",i,j,k,featureVector[index]);
-	// 		}
-	// 	}
-	// }
-
-	// fclose(output_fp);
 
 }
 
@@ -1213,215 +1105,191 @@ void LegendrePolynomial(const double *x, const double *y, const double *z, const
 	int i;
 	for (i = 0; i < size; i++)
 	{
-		r[i] = (2.0 * r - rCutoff) / rCutoff;
+		r[i] = (2.0 * r[i] - rCutoff) / rCutoff;
 	}
 
-	switch (polynomialOrder) 
-	{
-		case 0:
-			// 1
-			for ( i = 0; i < size; i++)
-			{
-				result[i] = 1.0;
-			}
-			break;
 
-		case 1:
-			//r
-			for ( i = 0; i < size; i++)
-			{
-				result[i] = r[i];
-			}
-			break;
+	if (polynomialOrder == 0){
+		// 1
+		for ( i = 0; i < size; i++)
+		{
+			result[i] = 1.0;
+		}
+	} else if (polynomialOrder == 1){
+		// x
+		for ( i = 0; i < size; i++)
+		{
+			result[i] = r[i];
+		}
+	} else if (polynomialOrder == 2){
+		// 0.5 * (3*x*x - 1)
+		double *temp1 = malloc( size * sizeof(double));
 
-		case 2:
-			// 0.5 * (3*x*x - 1)
-			double *temp1 = malloc( size * sizeof(double));
+		polyArray(r, 2, 3.0, temp1, size);
 
-			polyArray(r, 2, 3.0, temp1, size);
+		addScalarVector(temp1, -1.0, result, size);
+		multiplyScalarVector(result, 0.5, result, size);
 
-			addScalarVector(temp1, -1.0, result, size);
-			multiplyScalarVector(result, 0.5, result, size);
+		free(temp1);
+	} else if (polynomialOrder == 3){
+		// 0.5 * (5*x*x*x - 3x)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
 
-			free(temp1);
-			break;
+		polyArray(r, 3, 5.0, temp1, size);
 
-		case 3:
-			// 0.5 * (5*x*x*x - 3x)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
+		multiplyScalarVector(r, -3.0, temp2, size);
 
-			polyArray(r, 3, 5.0, temp1, size);
+		addVector(temp1, temp2, result, size);
+		multiplyScalarVector(result, 0.5, result, size);
 
-			multiplyScalarVector(r, -3.0, temp2, size);
+		free(temp1);
+		free(temp2);
+	} else if (polynomialOrder == 4){
+		// (1/8) * (35*x*x*x*x - 30*x*x +3)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
 
-			addVector(temp1, temp2, result, size);
-			multiplyScalarVector(result, 0.5, result, size);
+		polyArray(r, 4, 35.0, temp1, size);
+		polyArray(r, 2, -30.0, temp2, size);
 
-			free(temp1);
-			free(temp2);
-			break;
+		addVector(temp1, temp2, result, size);
+		addScalarVector(result, 3.0, result, size);
+		multiplyScalarVector(result, (1.0/8.0), result, size);
 
-		case 4:
-			// (1/8) * (35*x*x*x*x - 30*x*x +3)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
+		free(temp1);
+		free(temp2);
+	} else if (polynomialOrder == 5){
+		// (1/8) * (63*x*x*x*x*x - 70*x*x*x + 15*x)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
+		double *temp3 = malloc( size * sizeof(double));
 
-			polyArray(r, 4, 35.0, temp1, size);
-			polyArray(r, 2, -30.0, temp2, size);
+		polyArray(r, 5, 63.0, temp1, size);
+		polyArray(r, 3, -70.0, temp2, size);
+		multiplyScalarVector(r, 15.0, temp3, size);
 
-			addVector(temp1, temp2, result, size);
-			addScalarVector(result, 3.0, result, size);
-			multiplyScalarVector(result, (1.0/8.0), result, size);
+		addVector(temp1, temp2, result, size);
+		addVector(result, temp3, result, size);
+		multiplyScalarVector(result, (1.0/8.0), result, size);
 
-			free(temp1);
-			free(temp2);
-			break;
+		free(temp1);
+		free(temp2);
+		free(temp3);
+	} else if (polynomialOrder == 6){
+		// (1/16) * (231*x*x*x*x*x*x - 315*x*x*x*x + 105*x*x -5)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
+		double *temp3 = malloc( size * sizeof(double));
 
-		case 5:
-			// (1/8) * (63*x*x*x*x*x - 70*x*x*x + 15*x)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
-			double *temp3 = malloc( size * sizeof(double));
+		polyArray(r, 6, 231.0, temp1, size);
+		polyArray(r, 4, -315.0, temp2, size);
+		polyArray(r, 2, 105.0, temp3, size);
 
-			polyArray(r, 5, 63.0, temp1, size);
-			polyArray(r, 3, -70.0, temp2, size);
-			multiplyScalarVector(r, 15.0, temp3, size);
+		addVector(temp1, temp2, result, size);
+		addVector(result, temp3, result, size);
+		addScalarVector(result, -5.0, result, size);
+		multiplyScalarVector(result, (1.0/16.0), result, size);
 
-			addVector(temp1, temp2, result, size);
-			addVector(result, temp3, result, size);
-			multiplyScalarVector(result, (1.0/8.0), result, size);
+		free(temp1);
+		free(temp2);
+		free(temp3);
+	} else if (polynomialOrder == 7){
+		// (1/16) * (429*x*x*x*x*x*x*x - 693*x*x*x*x*x + 315*x*x*x - 35*x)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
+		double *temp3 = malloc( size * sizeof(double));
+		double *temp4 = malloc( size * sizeof(double));
 
-			free(temp1);
-			free(temp2);
-			free(temp3);
-			break;
+		polyArray(r, 7, 231.0, temp1, size);
+		polyArray(r, 5, -315.0, temp2, size);
+		polyArray(r, 3, 105.0, temp3, size);
+		multiplyScalarVector(r, 15.0, temp4, size);
 
-		case 6:
-			// (1/16) * (231*x*x*x*x*x*x - 315*x*x*x*x + 105*x*x -5)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
-			double *temp3 = malloc( size * sizeof(double));
+		addVector(temp1, temp2, result, size);
+		addVector(result, temp3, result, size);
+		addVector(result, temp4, result, size);
+		multiplyScalarVector(result, (1.0/16.0), result, size);
 
-			polyArray(r, 6, 231.0, temp1, size);
-			polyArray(r, 4, -315.0, temp2, size);
-			polyArray(r, 2, 105.0, temp3, size);
+		free(temp1);
+		free(temp2);
+		free(temp3);
+		free(temp4);
+	} else if (polynomialOrder == 8){
+		// (1/128) * (6435*x**8 - 12012*x**6 + 6930*x**4 - 1260*x*2 + 35)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
+		double *temp3 = malloc( size * sizeof(double));
+		double *temp4 = malloc( size * sizeof(double));
 
-			addVector(temp1, temp2, result, size);
-			addVector(result, temp3, result, size);
-			addScalarVector(result, -5.0, result, size);
-			multiplyScalarVector(result, (1.0/16.0), result, size);
+		polyArray(r, 8, 6435.0, temp1, size);
+		polyArray(r, 6, -12012.0, temp2, size);
+		polyArray(r, 4, 6930.0, temp3, size);
+		polyArray(r, 2, -1260.0, temp4, size);
 
-			free(temp1);
-			free(temp2);
-			free(temp3);
-			break;
+		addVector(temp1, temp2, result, size);
+		addVector(result, temp3, result, size);
+		addVector(result, temp4, result, size);
+		addScalarVector(result, 35.0, result, size);
+		multiplyScalarVector(result, (1.0/128.0), result, size);
 
-		case 7:
-			// (1/16) * (429*x*x*x*x*x*x*x - 693*x*x*x*x*x + 315*x*x*x - 35*x)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
-			double *temp3 = malloc( size * sizeof(double));
-			double *temp4 = malloc( size * sizeof(double));
+		free(temp1);
+		free(temp2);
+		free(temp3);
+		free(temp4);
+	} else if (polynomialOrder == 9){
+		// (1/128) * (12155*x**9 - 25740*x**7 + 18018*x**5 - 4620*x**3 + 315x)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
+		double *temp3 = malloc( size * sizeof(double));
+		double *temp4 = malloc( size * sizeof(double));
+		double *temp5 = malloc( size * sizeof(double));
 
-			polyArray(r, 7, 231.0, temp1, size);
-			polyArray(r, 5, -315.0, temp2, size);
-			polyArray(r, 3, 105.0, temp3, size);
-			multiplyScalarVector(r, 15.0, temp4, size);
+		polyArray(r, 9, 12155.0, temp1, size);
+		polyArray(r, 7, -25740.0, temp2, size);
+		polyArray(r, 5, 18018.0, temp3, size);
+		polyArray(r, 3, -4620.0, temp4, size);
+		multiplyScalarVector(r, 315.0, temp5, size);
 
-			addVector(temp1, temp2, result, size);
-			addVector(result, temp3, result, size);
-			addVector(result, temp4, result, size);
-			multiplyScalarVector(result, (1.0/16.0), result, size);
+		addVector(temp1, temp2, result, size);
+		addVector(result, temp3, result, size);
+		addVector(result, temp4, result, size);
+		addVector(result, temp5, result, size);
+		multiplyScalarVector(result, (1.0/128.0), result, size);
 
-			free(temp1);
-			free(temp2);
-			free(temp3);
-			free(temp4);
-			break;
+		free(temp1);
+		free(temp2);
+		free(temp3);
+		free(temp4);
+		free(temp5);
+	} else if (polynomialOrder == 10){
+		// (1/256) * (46189*x**10 - 109395*x**8 + 90090*x**6 - 30030*x**4 + 3465*x**2 -63)
+		double *temp1 = malloc( size * sizeof(double));
+		double *temp2 = malloc( size * sizeof(double));
+		double *temp3 = malloc( size * sizeof(double));
+		double *temp4 = malloc( size * sizeof(double));
+		double *temp5 = malloc( size * sizeof(double));
 
-		case 8:
-			// (1/128) * (6435*x**8 - 12012*x**6 + 6930*x**4 - 1260*x*2 + 35)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
-			double *temp3 = malloc( size * sizeof(double));
-			double *temp4 = malloc( size * sizeof(double));
+		polyArray(r, 10, 46189.0, temp1, size);
+		polyArray(r, 8, -109395.0, temp2, size);
+		polyArray(r, 6, 90090.0, temp3, size);
+		polyArray(r, 4, 30030.0, temp4, size);
+		polyArray(r, 2, 3465.0, temp5, size);
 
-			polyArray(r, 8, 6435.0, temp1, size);
-			polyArray(r, 6, -12012.0, temp2, size);
-			polyArray(r, 4, 6930.0, temp3, size);
-			polyArray(r, 2, -1260.0, temp4, size);
+		addVector(temp1, temp2, result, size);
+		addVector(result, temp3, result, size);
+		addVector(result, temp4, result, size);
+		addVector(result, temp5, result, size);
+		addScalarVector(result, -63.0, result, size);
+		multiplyScalarVector(result, (1.0/256.0), result, size);
 
-			addVector(temp1, temp2, result, size);
-			addVector(result, temp3, result, size);
-			addVector(result, temp4, result, size);
-			addScalarVector(result, 35.0, result, size);
-			multiplyScalarVector(result, (1.0/128.0), result, size);
-
-			free(temp1);
-			free(temp2);
-			free(temp3);
-			free(temp4);
-			break;
-
-		case 9:
-			// (1/128) * (12155*x**9 - 25740*x**7 + 18018*x**5 - 4620*x**3 + 315x)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
-			double *temp3 = malloc( size * sizeof(double));
-			double *temp4 = malloc( size * sizeof(double));
-			double *temp5 = malloc( size * sizeof(double));
-
-			polyArray(r, 9, 12155.0, temp1, size);
-			polyArray(r, 7, -25740.0, temp2, size);
-			polyArray(r, 5, 18018.0, temp3, size);
-			polyArray(r, 3, -4620.0, temp4, size);
-			multiplyScalarVector(r, 315.0, temp5, size);
-
-			addVector(temp1, temp2, result, size);
-			addVector(result, temp3, result, size);
-			addVector(result, temp4, result, size);
-			addVector(result, temp5, result, size);
-			multiplyScalarVector(result, (1.0/128.0), result, size);
-
-			free(temp1);
-			free(temp2);
-			free(temp3);
-			free(temp4);
-			free(temp5);
-			break;
-
-		case 10:
-			// (1/256) * (46189*x**10 - 109395*x**8 + 90090*x**6 - 30030*x**4 + 3465*x**2 -63)
-			double *temp1 = malloc( size * sizeof(double));
-			double *temp2 = malloc( size * sizeof(double));
-			double *temp3 = malloc( size * sizeof(double));
-			double *temp4 = malloc( size * sizeof(double));
-			double *temp5 = malloc( size * sizeof(double));
-
-			polyArray(r, 10, 46189.0, temp1, size);
-			polyArray(r, 8, -109395.0, temp2, size);
-			polyArray(r, 6, 90090.0, temp3, size);
-			polyArray(r, 4, 30030.0, temp4, size);
-			polyArray(r, 2, 3465.0, temp5, size);
-
-			addVector(temp1, temp2, result, size);
-			addVector(result, temp3, result, size);
-			addVector(result, temp4, result, size);
-			addVector(result, temp5, result, size);
-			addScalarVector(result, -63.0, result, size);
-			multiplyScalarVector(result, (1.0/256.0), result, size);
-
-			free(temp1);
-			free(temp2);
-			free(temp3);
-			free(temp4);
-			free(temp5);
-			break;
-
-		default:
-
-			break;
+		free(temp1);
+		free(temp2);
+		free(temp3);
+		free(temp4);
+		free(temp5);
+	} else {
+		printf("\nERROR: Legendre Order Not Valid\n");
 	}
 
 	for (i = 0; i < size; i++)
