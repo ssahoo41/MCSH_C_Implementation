@@ -66,6 +66,10 @@ void convolve2(const double *image, const double *stencil, const int imageDimX, 
 
 void convolve3(const double *image, const double *stencil, const int imageDimX, const int imageDimY, const int imageDimZ, const int stencilDimX, const int stencilDimY, const int stencilDimZ, double *result);
 
+void convolve4(const double *image, const double *stencil, const int imageDimX, const int imageDimY, const int imageDimZ, const int stencilDimX, const int stencilDimY, const int stencilDimZ, double *result);
+
+void convolve5(const double *image, const double *stencil, const int imageDimX, const int imageDimY, const int imageDimZ, const int stencilDimX, const int stencilDimY, const int stencilDimZ, double *result);
+
 void writeMatToFile(const char *filename, const double *data, const int dimX, const int dimY, const int dimZ);
 
 int mod(int a, int b);

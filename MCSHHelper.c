@@ -744,6 +744,124 @@ void convolve3(const double *image, const double *stencil, const int imageDimX, 
 	} 
 }
 
+void convolve4(const double *image, const double *stencil, const int imageDimX, const int imageDimY, const int imageDimZ, const int stencilDimX, const int stencilDimY, const int stencilDimZ, double *result)
+{
+	int imageSize = imageDimX * imageDimY * imageDimZ;
+	int stencilSize = stencilDimX * stencilDimY * stencilDimZ;
+
+	int i, j, k, l, m, n;
+	int stencilCenterX = (stencilDimX - 1) / 2;
+	int stencilCenterY = (stencilDimY - 1) / 2;
+	int stencilCenterZ = (stencilDimZ - 1) / 2;
+	int xShift,yShift,zShift;
+	int outIndex, outI, outJ, outK, outKpart, outKJpart;
+	int imageIndex = 0, stencilIndex = 0;
+
+	// for( i =0; i<10; i++)
+	// to
+	// for(i=10; i--; )
+
+	// for (k = imageDimZ; k--;){
+	// 	for ( j = imageDimY; j--;) {
+	// 		for ( i = imageDimX; i--;) {
+	for (k = 0; k < imageDimZ; k++){
+		for ( j = 0; j < imageDimY; j++) {
+			for ( i = 0; i < imageDimX; i++) {
+
+				stencilIndex = 0;
+				for (n = stencilDimZ, zShift = - stencilCenterZ; n--; zShift++){
+					// outK = mod ((k - zShift), imageDimZ);
+					outKpart = mod ((k - zShift), imageDimZ) * imageDimX * imageDimY;
+					
+					for ( m = stencilDimY, yShift = - stencilCenterY; m--; yShift++) {
+						// outJ = mod ((j - yShift), imageDimY);
+						outKJpart = mod ((j - yShift), imageDimY) * imageDimX + outKpart;
+
+						for ( l = stencilDimX,xShift = - stencilCenterX; l--; xShift++ ) {
+							outI = mod ((i - xShift), imageDimX);
+							// printf("%d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \n",i,j,k,l,m,n,xShift, yShift,zShift,outI,outJ,outK);
+							
+							// outIndex = outK * imageDimX * imageDimY + outJ * imageDimX + outI;
+							outIndex = outKJpart + outI;
+							result[outIndex] += stencil[stencilIndex]* image[imageIndex];
+							//result[outIndex] = fma(stencil[stencilIndex], image[imageIndex], result[outIndex]);
+							stencilIndex++;
+						}
+					}
+				}
+				imageIndex ++;
+			}
+		}
+	} 
+
+
+	// for (n = stencilDimZ, zShift = - stencilCenterZ; n--; zShift++){
+	// 				outK = mod ((k - zShift), imageDimZ);
+	// 				// outKpart = mod ((k - zShift), imageDimZ) * imageDimX * imageDimY;
+					
+	// 				for ( m = stencilDimY, yShift = - stencilCenterY; m--; yShift++) {
+	// 					outJ = mod ((j - yShift), imageDimY);
+	// 					// outKJpart = mod ((j - yShift), imageDimY) * imageDimX + outKpart;
+
+	// 					for ( l = stencilDimX,xShift = - stencilCenterX; l--; xShift++ ) {
+	// 						outI = mod ((i - xShift), imageDimX);
+}
+
+void convolve5(const double *image, const double *stencil, const int imageDimX, const int imageDimY, const int imageDimZ, const int stencilDimX, const int stencilDimY, const int stencilDimZ, double *result)
+{
+	int imageSize = imageDimX * imageDimY * imageDimZ;
+	int stencilSize = stencilDimX * stencilDimY * stencilDimZ;
+
+	int i, j, k, l, m, n;
+	int stencilCenterX = (stencilDimX - 1) / 2;
+	int stencilCenterY = (stencilDimY - 1) / 2;
+	int stencilCenterZ = (stencilDimZ - 1) / 2;
+	int xShift,yShift,zShift;
+	int outIndex, outI, outJ, outK;
+	int imageXYDim = imageDimX * imageDimY, outKpart, outJKpart;
+	int outputIndex = 0, imageIndex = 0, stencilIndex = 0;
+	double currentPixelValue;
+
+	for (k = 0; k < imageDimZ; k++){
+		for ( j = 0; j < imageDimY; j++) {
+			for ( i = 0; i < imageDimX; i++) {
+				currentPixelValue = 0.0;
+
+				stencilIndex = 0;
+				// for (n = 0, zShift = - stencilCenterZ; n < stencilDimZ; n++, zShift++){
+				for (n = stencilDimZ, zShift = - stencilCenterZ; n--; zShift++){
+					outK = mod ((k - zShift), imageDimZ);
+					outKpart = outK * imageXYDim;
+					// for ( m = 0, yShift = - stencilCenterY; m < stencilDimY; m++, yShift++) {
+					for ( m = stencilDimY, yShift = - stencilCenterY; m--; yShift++) {
+						outJ = mod ((j - yShift), imageDimY);
+						outJKpart = outJ * imageDimX + outKpart;
+						// for ( l = 0, xShift = - stencilCenterX; l < stencilDimX; l++, xShift++) {
+						for ( l = stencilDimX,xShift = - stencilCenterX; l--; xShift++ ) {
+							outI = mod ((i - xShift), imageDimX);
+							// printf("%d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \n",i,j,k,l,m,n,xShift, yShift,zShift,outI,outJ,outK);
+							
+							// imageIndex = outK * imageDimX * imageDimY + outJ * imageDimX + outI;
+							imageIndex = outJKpart + outI;
+							// nothing: 0.665
+							// currentPixelValue = stencil[stencilIndex]* image[imageIndex];
+							currentPixelValue += stencil[stencilIndex]* image[imageIndex]; // 5.64s
+							// currentPixelValue = 1.0; // 0.8527s
+							// currentPixelValue += 1.0; // 5.185 s
+							// accessing image[imageIndex] is slower
+
+							stencilIndex++;
+						}
+					}
+				}
+
+				result[outputIndex] = currentPixelValue;
+				outputIndex ++;
+			}
+		}
+	} 
+}
+
 
 void writeMatToFile(const char *filename, const double *data, const int dimX, const int dimY, const int dimZ)
 {

@@ -43,7 +43,7 @@ void MaxwellCartesianSphericalHarmonics(const double *x, const double *y, const 
 	// for (i = 0; i < size; i++)
 	// {
 	// 	double r_calc = sqrt(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]);
-	// 	printf("x: %10f \t y: %10f \t z: %10f \t r: %10f \t r_calc: %10f \t rCutoff: %10f \t r>rCutoff%d\n", x[i],y[i],z[i], r[i],  r_calc, rCutoff, r[i]>rCutoff);
+	// 	printf("x: %10f \t y: %10f \t z: %10f \t r: %10f \t r_calc: %././././././10f \t rCutoff: %10f \t r>rCutoff%d\n", x[i],y[i],z[i], r[i],  r_calc, rCutoff, r[i]>rCutoff);
 	// }
 	switch (l) 
 	{
@@ -596,7 +596,7 @@ void calcStencilAndConvolveAndAddResult(const double *image, const int imageDimX
 	end_stencil_t  = MPI_Wtime();
 
 
-	convolve3(image, stencil, imageDimX, imageDimY, imageDimZ, stencilDimX, stencilDimY, stencilDimZ, convolveResult);
+	convolve5(image, stencil, imageDimX, imageDimY, imageDimZ, stencilDimX, stencilDimY, stencilDimZ, convolveResult);
 	// printf("end convolve1 \n");
 	// time(&end_convolve_t);
 	end_convolve_t  = MPI_Wtime();
