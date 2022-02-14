@@ -74,17 +74,17 @@ void writeMatToFile(const char *filename, const double *data, const int dimX, co
 
 int mod(int a, int b);
 
-void getMainParameter_RadialLegendre(const int maxMCSHOrder, const int maxLegendreOrder, const int length, int* LegendreOrderList, int* lList, int* groupList);
+void getMainParameter_RadialLegendre(const int maxMCSHOrder, const int maxLegendreOrder, const int length, int* LegendreOrderList, int* lList);//, int* groupList);
 
 int getDescriptorListLength_RadialLegendre(const int maxLegendreOrder, const int maxMCSHOrder);
 
-void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxOrder, const int length, double* rCutoffList, int* lList, int* groupList);
+void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder, const int length, double* rCutoffList, int* lList);//, int* groupList);
 
-int getDescriptorListLength_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxOrder);
+int getDescriptorListLength_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder);
 
 int getNumRCutoff(const double rStepsize, const double rMaxCutoff);
 
-int getNumGroup(const int maxOrder);
+int getNumGroup(const int maxMCSHOrder);
 
 int getCurrentGroupNumber(const int currentIndex);
 

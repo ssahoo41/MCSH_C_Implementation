@@ -5,17 +5,22 @@
 #include <mpi.h>
 # include <math.h>
 /* BLAS, LAPACK, LAPACKE routines */
-#ifdef USE_MKL
+//#ifdef USE_MKL
     // #define MKL_Complex16 double complex
-    #include <mkl.h>
-#else
-    #include <cblas.h>
-#endif
+   // #include <mkl.h>
+//#else
+//    #include <cblas.h>
+//#endif
 
 #include "MCSHHelper.h"
 #include "MCSH.h"
 #include "MCSHDescriptorMain.h"
-#include "test_data.h"
+//#include "test_data.h"
+//#include "pseudo_dens_CO_60.h"
+//#include "pseudo_dens_CO_90.h"
+#include "pseudo_dens_CO_30.h"
+
+
 
 
 int main(int argc, char *argv[])
@@ -25,8 +30,9 @@ int main(int argc, char *argv[])
 
 	double start = MPI_Wtime();
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);//rank or process ID
+	MPI_Comm_size(MPI_COMM_WORLD, &world_size);//total number of processors
+	//printf("I am process %i out of %i processes\n", world_rank, world_size);
 
 	int numProcPerRow = 1;
 	int color = world_rank  / numProcPerRow; // Determine color based on row
@@ -38,31 +44,34 @@ int main(int argc, char *argv[])
 
 	int numParallelComm = world_size / numProcPerRow;
 
-	int imageDimX = 26, imageDimY = 26, imageDimZ = 26;
-	// double *rho = malloc( imageDimX * imageDimY * imageDimZ * sizeof(double));
-	double *rho = Pt_test;
+	int imageDimX = 101, imageDimY = 101, imageDimZ = 101;
+	//double *rho = malloc( imageDimX * imageDimY * imageDimZ * sizeof(double));
+	//double *rho = Pt_test;
+	//double *rho = CO_test_60;
+	//double *rho = CO_test_90;
+	double *rho = CO_test_30;
 	int ii, imageSize = imageDimX * imageDimY * imageDimZ;
-	double current = 0.0;
-	for (ii = 0; ii < imageSize; ii++)
-	{
-		rho[ii] = current;
-		current += 1.0;
-	}
+	//double current = 0.0;
+	//for (ii = 0; ii < imageSize; ii++)
+	//{
+	//	rho[ii] = current;
+	//	current += 1.0;
+	//}
 
 	double hx = 0.1, hy = 0.1, hz = 0.1;
-	double Uvec[9] = {0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0};
+	//double Uvec[9] = {0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0};
+	double Uvec[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 	double *U = Uvec;
 	int accuracy = 2;
 
-	int MCSHMaxOrder = 3;
-	double MCSHMaxR = 0.6;
-	double MCSHRStepsize = 0.1;
+	int MCSHMaxOrder = 2;
+	double MCSHMaxR = 2.0;
+	//double MCSHRStepsize = 0.1;
+
 
 	// printf("\nstart MCSH\n");
 	// MCSHDescriptorMain_RadialRStep(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, MCSHMaxOrder, MCSHMaxR, MCSHRStepsize, color, numParallelComm, row_comm);
-	MCSHDescriptorMain_RadialLegendre(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, 0.5, MCSHMaxOrder, 5, color, numParallelComm, row_comm);
-
-
+	MCSHDescriptorMain_RadialLegendre(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, MCSHMaxR, MCSHMaxOrder, 0, color, numParallelComm, row_comm);
 
 	double end = MPI_Wtime();
 	printf("\n\n END execution time %10f\n\n", end - start);
@@ -72,7 +81,7 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
+/*
 int main_old(int argc, char *argv[])
 {
 	MPI_Init(&argc,&argv);
@@ -180,10 +189,10 @@ int main_set(int argc, char *argv[])
 
 int main_single(int argc, char *argv[])
 {
-	/*printf("start\n");
-	double Uvec[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-	double *U = Uvec;
-	calcStencil(0.1, 0.1, 0.1, 0.5, 1, "100", U, 6, 0);*/
+	//printf("start\n");
+	//double Uvec[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+	//double *U = Uvec;
+	//calcStencil(0.1, 0.1, 0.1, 0.5, 1, "100", U, 6, 0);
 
 
 	MPI_Init(&argc,&argv);
@@ -265,7 +274,7 @@ int main_single(int argc, char *argv[])
 
 
 
-
+*/
 
 
 

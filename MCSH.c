@@ -6,12 +6,12 @@
 #include <mpi.h>
 # include <math.h>
 /* BLAS, LAPACK, LAPACKE routines */
-#ifdef USE_MKL
+//#ifdef USE_MKL
     // #define MKL_Complex16 double complex
-    #include <mkl.h>
-#else
-    #include <cblas.h>
-#endif
+    //#include <mkl.h>
+//#else
+//    #include <cblas.h>
+//#endif
 
 #include "MCSHHelper.h"
 #include "MCSH.h"
@@ -499,30 +499,30 @@ void calculateStencil(const int stencilDimX, const int stencilDimY, const int st
 					  const double *U, const int accuracy, double *stencil)
 {
 	int pixelEvalArrSize = accuracy * accuracy * accuracy;
-
+	printf("%d", pixelEvalArrSize);
 	double dv = calcDv(hx, hy, hz, accuracy,U);
-
+	printf("%f", dv);
 	double *refX = calloc( pixelEvalArrSize, sizeof(double));
 	double *refY = calloc( pixelEvalArrSize, sizeof(double));
 	double *refZ = calloc( pixelEvalArrSize, sizeof(double));
 
 	getCentralCoords(hx, hy, hz, accuracy, refX, refY, refZ);
 
-	// char stencilRefXFilename[128];
-	// snprintf(stencilRefXFilename, 128, "stencil_RefX_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
-	// writeMatToFile(stencilRefXFilename, refX, accuracy, accuracy, accuracy);
+	//char stencilRefXFilename[128];
+	//snprintf(stencilRefXFilename, 128, "stencil_RefX_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	//writeMatToFile(stencilRefXFilename, refX, accuracy, accuracy, accuracy);
 
-	// char stencilRefYFilename[128];
-	// snprintf(stencilRefYFilename, 128, "stencil_RefY_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
-	// writeMatToFile(stencilRefYFilename, refY, accuracy, accuracy, accuracy);
+	//char stencilRefYFilename[128];
+	//snprintf(stencilRefYFilename, 128, "stencil_RefY_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	//writeMatToFile(stencilRefYFilename, refY, accuracy, accuracy, accuracy);
 
-	// char stencilRefZFilename[128];
-	// snprintf(stencilRefZFilename, 128, "stencil_RefZ_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
-	// writeMatToFile(stencilRefZFilename, refZ, accuracy, accuracy, accuracy);
+	//char stencilRefZFilename[128];
+	//snprintf(stencilRefZFilename, 128, "stencil_RefZ_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	//writeMatToFile(stencilRefZFilename, refZ, accuracy, accuracy, accuracy);
 
 	int centerX = (stencilDimX - 1)/2;
-    int centerY = (stencilDimY - 1)/2;
-    int centerZ = (stencilDimZ - 1)/2;
+    	int centerY = (stencilDimY - 1)/2;
+    	int centerZ = (stencilDimZ - 1)/2;
 
 	double *tempXArr = calloc( pixelEvalArrSize, sizeof(double));
 	double *tempYArr = calloc( pixelEvalArrSize, sizeof(double));
@@ -571,7 +571,7 @@ void calculateStencil(const int stencilDimX, const int stencilDimY, const int st
 
 void calcStencilAndConvolveAndAddResult(const double *image, const int imageDimX, const int imageDimY, const int imageDimZ, const double hx, const double hy, const double hz, 
 										const double rCutoff, const int l, const char *n, const int radialFunctionType, const int radialFunctionOrder, 
-										const double *U, const int accuracy, double *convolveResult)
+										const double *U, const int accuracy, double *convolveResult, const int stencilIndex)
 {
 	double start_t, end_stencil_t, end_convolve_t, end_convolve2_t; 
 	//time(&start_t); 
@@ -587,16 +587,20 @@ void calcStencilAndConvolveAndAddResult(const double *image, const int imageDimX
 					 rCutoff, l, n, radialFunctionType, radialFunctionOrder, U, accuracy, stencil);
 
 
-	// char stencilFilename[128];
-	// snprintf(stencilFilename, 128, "stencil_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
-	// writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
+	//char stencilFilename[128];
+	//snprintf(stencilFilename, 128, "stencil_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	//writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
 
-	// printf("end stencil calculation \n");
-	// time(&end_stencil_t); 
+	printf("end stencil calculation \n");
+	//time(&end_stencil_t); 
 	end_stencil_t  = MPI_Wtime();
 
 
 	convolve5(image, stencil, imageDimX, imageDimY, imageDimZ, stencilDimX, stencilDimY, stencilDimZ, convolveResult);
+	char convolveResultFilename[128];
+	snprintf(convolveResultFilename, 128, "%s_%d.csv", "convolve_result", stencilIndex);
+
+	writeMatToFile(convolveResultFilename, convolveResult, imageDimX, imageDimY, imageDimZ);	
 	// printf("end convolve1 \n");
 	// time(&end_convolve_t);
 	end_convolve_t  = MPI_Wtime();
@@ -627,7 +631,7 @@ void calcStencilAndConvolveAndSave(const double *image, const int imageDimX, con
 	char stencilFilename[128];
 
 	snprintf(stencilFilename, 128, "%s_%d.csv", "stencil", stencilIndex);
-	printf(stencilFilename);
+	printf("%s",stencilFilename);
 
 	writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
 
@@ -677,7 +681,7 @@ void calcStencilAndSave(const double hx, const double hy, const double hz, const
 
 
 void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const int imageDimY, const int imageDimZ, const double hx, const double hy, const double hz, 
-							   const double rCutoff, const int l, const int group, const int radialFunctionType, const int radialFunctionOrder, const double *U, const int accuracy)
+							   const double rCutoff, const int l, const int radialFunctionType, const int radialFunctionOrder, const double *U, const int accuracy)
 {	
 	int imageSize = imageDimX * imageDimY * imageDimZ;
 	double *featureVector = calloc( imageSize, sizeof(double));
@@ -686,26 +690,19 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 	switch (l) 
 	{
 		case 0:
-			if (group == 1){
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "000", radialFunctionType, radialFunctionOrder, U, accuracy, featureVector);
-			}
-			else{
-				die("\nERROR: group number is not valid\n");
-			}
-
+			calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "000", radialFunctionType, radialFunctionOrder, U, accuracy, featureVector, 0);
 			break;
 
 		case 1:
-			if (group == 1)
-			{	
+			{
 				double *component1 = calloc( imageSize, sizeof(double));
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "100", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "010", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "001", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "100", radialFunctionType, radialFunctionOrder, U, accuracy, component1, 10);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "010", radialFunctionType, radialFunctionOrder, U, accuracy, component2, 11);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "001", radialFunctionType, radialFunctionOrder, U, accuracy, component3, 12);
+	
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
 				powVector(component3, 2, component3, imageSize);
@@ -719,119 +716,117 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				free(component2);
 				free(component3);
 			}
-			else
-			{
-				die("\nERROR: group number is not valid\n");
-			}
-
 			break;
 
 		case 2:
-			if (group == 1)
-			{	
-				double *component1 = calloc( imageSize, sizeof(double));
-				double *component2 = calloc( imageSize, sizeof(double));
-				double *component3 = calloc( imageSize, sizeof(double));
-
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "200", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "020", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "002", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-
-				powVector(component1, 2, component1, imageSize);
-				powVector(component2, 2, component2, imageSize);
-				powVector(component3, 2, component3, imageSize);
-
-				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-
-				sqrtVector(featureVector, featureVector, imageSize);
-
-				free(component1);
-				free(component2);
-				free(component3);
-			}
-			else if (group == 2)
-			{	
-				double *component1 = calloc( imageSize, sizeof(double));
-				double *component2 = calloc( imageSize, sizeof(double));
-				double *component3 = calloc( imageSize, sizeof(double));
-
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "110", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "101", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "011", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-
-				powVector(component1, 2, component1, imageSize);
-				powVector(component2, 2, component2, imageSize);
-				powVector(component3, 2, component3, imageSize);
-
-				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-
-				sqrtVector(featureVector, featureVector, imageSize);
-
-				free(component1);
-				free(component2);
-				free(component3);
-			}
-			else
 			{
-				die("\nERROR: group number is not valid\n");
-			}
+				double *component1 = calloc( imageSize, sizeof(double));
+				double *component2 = calloc( imageSize, sizeof(double));
+				double *component3 = calloc( imageSize, sizeof(double));
+			
+				double *component4 = calloc( imageSize, sizeof(double));
+				double *component5 = calloc( imageSize, sizeof(double));
+				double *component6 = calloc( imageSize, sizeof(double));
 
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "200", radialFunctionType, radialFunctionOrder, U, accuracy, component1, 21);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "020", radialFunctionType, radialFunctionOrder, U, accuracy, component2, 22);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "002", radialFunctionType, radialFunctionOrder, U, accuracy, component3, 23);
+			
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "110", radialFunctionType, radialFunctionOrder, U, accuracy, component4, 24);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "101", radialFunctionType, radialFunctionOrder, U, accuracy, component5, 25);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "011", radialFunctionType, radialFunctionOrder, U, accuracy, component6, 26);
+
+				powVector(component1, 2, component1, imageSize);
+				powVector(component2, 2, component2, imageSize);
+				powVector(component3, 2, component3, imageSize);
+			
+				powVector(component4, 2, component4, imageSize);
+				powVector(component5, 2, component5, imageSize);
+				powVector(component6, 2, component6, imageSize);	
+			
+				multiplyScalarVector(component4, 2.0, component4, imageSize);
+				multiplyScalarVector(component5, 2.0, component5, imageSize);
+				multiplyScalarVector(component6, 2.0, component6, imageSize);
+
+				addVector(component1, component2, featureVector, imageSize);
+				addVector(featureVector, component3, featureVector, imageSize);	
+				addVector(featureVector, component4, featureVector, imageSize);	
+				addVector(featureVector, component5, featureVector, imageSize);	
+				addVector(featureVector, component6, featureVector, imageSize);	
+
+				sqrtVector(featureVector, featureVector, imageSize);
+
+				free(component1);
+				free(component2);
+				free(component3);
+				free(component4);
+				free(component5);
+				free(component6);
+			}
 			break;
 
 		case 3:
-			if (group == 1)
-			{	
+			{
 				double *component1 = calloc( imageSize, sizeof(double));
 				double *component2 = calloc( imageSize, sizeof(double));
 				double *component3 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "300", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "030", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "003", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-
-				powVector(component1, 2, component1, imageSize);
-				powVector(component2, 2, component2, imageSize);
-				powVector(component3, 2, component3, imageSize);
-
-				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-
-				sqrtVector(featureVector, featureVector, imageSize);
-
-				free(component1);
-				free(component2);
-				free(component3);
-			}
-			else if (group == 2)
-			{	
-				double *component1 = calloc( imageSize, sizeof(double));
-				double *component2 = calloc( imageSize, sizeof(double));
-				double *component3 = calloc( imageSize, sizeof(double));
 				double *component4 = calloc( imageSize, sizeof(double));
 				double *component5 = calloc( imageSize, sizeof(double));
 				double *component6 = calloc( imageSize, sizeof(double));
+				double *component7 = calloc( imageSize, sizeof(double));
+				double *component8 = calloc( imageSize, sizeof(double));
+				double *component9 = calloc( imageSize, sizeof(double));
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "210", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "201", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "021", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "120", radialFunctionType, radialFunctionOrder, U, accuracy, component4);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "102", radialFunctionType, radialFunctionOrder, U, accuracy, component5);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "012", radialFunctionType, radialFunctionOrder, U, accuracy, component6);
+				double *component10 = calloc( imageSize, sizeof(double));
+
+				// group 1
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "300", radialFunctionType, radialFunctionOrder, U, accuracy, component1, 31);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "030", radialFunctionType, radialFunctionOrder, U, accuracy, component2, 32);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "003", radialFunctionType, radialFunctionOrder, U, accuracy, component3, 33);	
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
 				powVector(component3, 2, component3, imageSize);
+
+				// group 2
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "210", radialFunctionType, radialFunctionOrder, U, accuracy, component4, 34);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "201", radialFunctionType, radialFunctionOrder, U, accuracy, component5, 35);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "021", radialFunctionType, radialFunctionOrder, U, accuracy, component6, 36);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "120", radialFunctionType, radialFunctionOrder, U, accuracy, component7, 37);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "102", radialFunctionType, radialFunctionOrder, U, accuracy, component8, 38);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "012", radialFunctionType, radialFunctionOrder, U, accuracy, component9, 39);	
+
 				powVector(component4, 2, component4, imageSize);
 				powVector(component5, 2, component5, imageSize);
 				powVector(component6, 2, component6, imageSize);
+				powVector(component7, 2, component7, imageSize);
+				powVector(component8, 2, component8, imageSize);
+				powVector(component9, 2, component9, imageSize);
+	
+				multiplyScalarVector(component4, 3.0, component4, imageSize);	
+				multiplyScalarVector(component5, 3.0, component5, imageSize);
+				multiplyScalarVector(component6, 3.0, component6, imageSize);
+				multiplyScalarVector(component7, 3.0, component7, imageSize);
+				multiplyScalarVector(component8, 3.0, component8, imageSize);
+				multiplyScalarVector(component9, 3.0, component9, imageSize);
+
+			// group 3
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "111", radialFunctionType, radialFunctionOrder, U, accuracy, component10, 310);
+
+				powVector(component10, 2, component10, imageSize);
+
+				multiplyScalarVector(component10, 6, component10, imageSize);	
 
 				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-				addVector(featureVector, component4, featureVector, imageSize);
-				addVector(featureVector, component5, featureVector, imageSize);
-				addVector(featureVector, component6, featureVector, imageSize);
+				addVector(featureVector, component3, featureVector, imageSize);	
+				addVector(featureVector, component4, featureVector, imageSize);	
+				addVector(featureVector, component5, featureVector, imageSize);	
+				addVector(featureVector, component6, featureVector, imageSize);	
+				addVector(featureVector, component7, featureVector, imageSize);
+				addVector(featureVector, component8, featureVector, imageSize);	
+				addVector(featureVector, component9, featureVector, imageSize);	
+				addVector(featureVector, component10, featureVector, imageSize);		
 
 				sqrtVector(featureVector, featureVector, imageSize);
 
@@ -841,131 +836,109 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 				free(component4);
 				free(component5);
 				free(component6);
+				free(component7);
+				free(component8);
+				free(component9);
+				free(component10);
 			}
-			else if (group == 3)
-			{
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "111", radialFunctionType, radialFunctionOrder, U, accuracy, featureVector);
-			}
-			else
-			{
-				die("\nERROR: group number is not valid\n");
-			}
-
 			break;
 
 		case 4:
-			if (group == 1)
-			{	
+			{
 				double *component1 = calloc( imageSize, sizeof(double));
 				double *component2 = calloc( imageSize, sizeof(double));
-				double *component3 = calloc( imageSize, sizeof(double));
+				double *component3 = calloc( imageSize, sizeof(double));	
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "400", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "040", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "004", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-
-				powVector(component1, 2, component1, imageSize);
-				powVector(component2, 2, component2, imageSize);
-				powVector(component3, 2, component3, imageSize);
-
-				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-
-				sqrtVector(featureVector, featureVector, imageSize);
-
-				free(component1);
-				free(component2);
-				free(component3);
-			}
-			else if (group == 2)
-			{	
-				double *component1 = calloc( imageSize, sizeof(double));
-				double *component2 = calloc( imageSize, sizeof(double));
-				double *component3 = calloc( imageSize, sizeof(double));
 				double *component4 = calloc( imageSize, sizeof(double));
 				double *component5 = calloc( imageSize, sizeof(double));
 				double *component6 = calloc( imageSize, sizeof(double));
+				double *component7 = calloc( imageSize, sizeof(double));
+				double *component8 = calloc( imageSize, sizeof(double));
+				double *component9 = calloc( imageSize, sizeof(double));	
 
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "310", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "301", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "031", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "130", radialFunctionType, radialFunctionOrder, U, accuracy, component4);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "103", radialFunctionType, radialFunctionOrder, U, accuracy, component5);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "013", radialFunctionType, radialFunctionOrder, U, accuracy, component6);
+				double *component10 = calloc( imageSize, sizeof(double));
+				double *component11 = calloc( imageSize, sizeof(double));
+				double *component12 = calloc( imageSize, sizeof(double));
+
+				double *component13 = calloc( imageSize, sizeof(double));
+				double *component14 = calloc( imageSize, sizeof(double));
+				double *component15 = calloc( imageSize, sizeof(double));	
+
+				// group 1
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "400", radialFunctionType, radialFunctionOrder, U, accuracy, component1, 41);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "040", radialFunctionType, radialFunctionOrder, U, accuracy, component2, 42);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "004", radialFunctionType, radialFunctionOrder, U, accuracy, component3, 43);	
 
 				powVector(component1, 2, component1, imageSize);
 				powVector(component2, 2, component2, imageSize);
 				powVector(component3, 2, component3, imageSize);
+
+				// group 2
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "310", radialFunctionType, radialFunctionOrder, U, accuracy, component4, 44);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "301", radialFunctionType, radialFunctionOrder, U, accuracy, component5, 45);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "031", radialFunctionType, radialFunctionOrder, U, accuracy, component6, 46);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "130", radialFunctionType, radialFunctionOrder, U, accuracy, component7, 47);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "103", radialFunctionType, radialFunctionOrder, U, accuracy, component8, 48);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "013", radialFunctionType, radialFunctionOrder, U, accuracy, component9, 49);	
+
 				powVector(component4, 2, component4, imageSize);
 				powVector(component5, 2, component5, imageSize);
 				powVector(component6, 2, component6, imageSize);
+				powVector(component7, 2, component7, imageSize);
+				powVector(component8, 2, component8, imageSize);
+				powVector(component9, 2, component9, imageSize);
+
+				multiplyScalarVector(component4, 4.0, component4, imageSize);	
+				multiplyScalarVector(component5, 4.0, component5, imageSize);
+				multiplyScalarVector(component6, 4.0, component6, imageSize);
+				multiplyScalarVector(component7, 4.0, component7, imageSize);
+				multiplyScalarVector(component8, 4.0, component8, imageSize);
+				multiplyScalarVector(component9, 4.0, component9, imageSize);	
+
+				// group 3
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "220", radialFunctionType, radialFunctionOrder, U, accuracy, component10, 410);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "202", radialFunctionType, radialFunctionOrder, U, accuracy, component11, 411);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "022", radialFunctionType, radialFunctionOrder, U, accuracy, component12, 412);	
+
+				powVector(component10, 2, component10, imageSize);
+				powVector(component11, 2, component11, imageSize);
+				powVector(component12, 2, component12, imageSize);	
+
+				multiplyScalarVector(component10, 6.0, component10, imageSize);
+				multiplyScalarVector(component11, 6.0, component11, imageSize);
+				multiplyScalarVector(component12, 6.0, component12, imageSize);	
+
+				// group 4
+
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "211", radialFunctionType, radialFunctionOrder, U, accuracy, component13, 413);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "121", radialFunctionType, radialFunctionOrder, U, accuracy, component14, 414);
+				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "112", radialFunctionType, radialFunctionOrder, U, accuracy, component15, 415);
+
+				powVector(component13, 2, component13, imageSize);
+				powVector(component14, 2, component14, imageSize);
+				powVector(component15, 2, component15, imageSize);
+
+				multiplyScalarVector(component13, 12.0, component13, imageSize);
+				multiplyScalarVector(component14, 12.0, component14, imageSize);
+				multiplyScalarVector(component15, 12.0, component15, imageSize);	
 
 				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-				addVector(featureVector, component4, featureVector, imageSize);
-				addVector(featureVector, component5, featureVector, imageSize);
-				addVector(featureVector, component6, featureVector, imageSize);
+				addVector(featureVector, component3, featureVector, imageSize);	
+				addVector(featureVector, component4, featureVector, imageSize);	
+				addVector(featureVector, component5, featureVector, imageSize);	
+				addVector(featureVector, component6, featureVector, imageSize);	
+				addVector(featureVector, component7, featureVector, imageSize);
+				addVector(featureVector, component8, featureVector, imageSize);	
+				addVector(featureVector, component9, featureVector, imageSize);	
+				addVector(featureVector, component10, featureVector, imageSize);
+				addVector(featureVector, component11, featureVector, imageSize);	
+				addVector(featureVector, component12, featureVector, imageSize);
+				addVector(featureVector, component13, featureVector, imageSize);	
+				addVector(featureVector, component14, featureVector, imageSize);	
+				addVector(featureVector, component15, featureVector, imageSize);		
 
-				sqrtVector(featureVector, featureVector, imageSize);
-
-				free(component1);
-				free(component2);
-				free(component3);
-				free(component4);
-				free(component5);
-				free(component6);
+				sqrtVector(featureVector, featureVector, imageSize);		
 			}
-			else if (group == 3)
-			{
-				double *component1 = calloc( imageSize, sizeof(double));
-				double *component2 = calloc( imageSize, sizeof(double));
-				double *component3 = calloc( imageSize, sizeof(double));
-
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "220", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "202", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "022", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-
-				powVector(component1, 2, component1, imageSize);
-				powVector(component2, 2, component2, imageSize);
-				powVector(component3, 2, component3, imageSize);
-
-				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-
-				sqrtVector(featureVector, featureVector, imageSize);
-
-				free(component1);
-				free(component2);
-				free(component3);
-			}
-			else if (group == 4)
-			{
-				double *component1 = calloc( imageSize, sizeof(double));
-				double *component2 = calloc( imageSize, sizeof(double));
-				double *component3 = calloc( imageSize, sizeof(double));
-
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "211", radialFunctionType, radialFunctionOrder, U, accuracy, component1);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "121", radialFunctionType, radialFunctionOrder, U, accuracy, component2);
-				calcStencilAndConvolveAndAddResult(image, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoff, l, "112", radialFunctionType, radialFunctionOrder, U, accuracy, component3);
-
-				powVector(component1, 2, component1, imageSize);
-				powVector(component2, 2, component2, imageSize);
-				powVector(component3, 2, component3, imageSize);
-
-				addVector(component1, component2, featureVector, imageSize);
-				addVector(featureVector, component3, featureVector, imageSize);
-
-				sqrtVector(featureVector, featureVector, imageSize);
-
-				free(component1);
-				free(component2);
-				free(component3);
-			}
-			else
-			{
-				die("\nERROR: group number is not valid\n");
-			}
-
 			break;
 			
 
@@ -978,11 +951,11 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 
 	if (radialFunctionType == 1)
 	{
-		snprintf(convolveResultFilename, 128, "%s_%d_%d_%f.csv", "MCSH_feature", l, group, rCutoff);
+		snprintf(convolveResultFilename, 128, "%s_%d_%f.csv", "MCSH_feature", l, rCutoff);// change this
 	}
 	else if (radialFunctionType == 2)
 	{
-		snprintf(convolveResultFilename, 128, "%s_%d_%d_%f_Legendre_%d.csv", "MCSH_feature", l, group, rCutoff, radialFunctionOrder);
+		snprintf(convolveResultFilename, 128, "%s_%d_%f_Legendre_%d.csv", "MCSH_feature", l, rCutoff, radialFunctionOrder);// change this
 	}
 	
 	// printf(DensFilename);
@@ -991,95 +964,32 @@ void prepareMCSHFeatureAndSave(const double *image, const int imageDimX, const i
 }
 
 
-double scoreTask(const double rCutoff, const int l, const int group)
+double scoreTask(const double rCutoff, const int l)//, const int group)
 {
 	double result;
 	switch (l) 
 	{
 		case 0:
-			if (group == 1)
-			{
-				result = 1;
-			}
-			else
-			{
-				printf("\n***** WARNING: group number not valid *****\n");
-			}
+			result = 1;
 			break;
 
 		case 1:
-			if (group == 1)
-			{
-				result = 3;
-			}
-			else
-			{
-				printf("\n***** WARNING: group number not valid *****\n");
-				result = 1;
-			}
+			result = 3;
 			break;
 
 		case 2:
-			if (group == 1)
-			{
-				result = 3;
-			}
-			else if (group == 2)
-			{
-				result = 3;
-			}
-			else
-			{
-				printf("\n***** WARNING: group number not valid *****\n");
-				result = 1;
-			}
+			result = 6;
 			break;
 
 
 		case 3:
-			if (group == 1)
-			{
-				result = 3;
-			}
-			else if (group == 2)
-			{
-				result = 6;
-			}
-			else if (group == 3)
-			{
-				result = 1;
-			}
-			else
-			{
-				printf("\n***** WARNING: group number not valid *****\n");
-				result = 1;
-			}
+			result = 10;
 			break;
 
 
 
 		case 4:
-			if (group == 1)
-			{
-				result = 3;
-			}
-			else if (group == 2)
-			{
-				result = 6;
-			}
-			else if (group == 3)
-			{
-				result = 3;
-			}
-			else if (group == 4)
-			{
-				result = 3;
-			}
-			else
-			{
-				printf("\n***** WARNING: group number not valid *****\n");
-				result = 1;
-			}
+			result = 15;
 			break;
 
 

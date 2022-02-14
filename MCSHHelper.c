@@ -6,12 +6,12 @@
 #include <mpi.h>
 # include <math.h>
 /* BLAS, LAPACK, LAPACKE routines */
-#ifdef USE_MKL
+//#ifdef USE_MKL
     // #define MKL_Complex16 double complex
-    #include <mkl.h>
-#else
-    #include <cblas.h>
-#endif
+//    #include <mkl.h>
+//#else
+//    #include <cblas.h>
+//#endif
 
 #include "MCSHHelper.h"
 
@@ -103,6 +103,7 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 	int dimY = 2 * ceil(rCutoff / hy) + 1;
 	int dimZ = 2 * ceil(rCutoff / hz) + 1;
 
+	//printf("\n Before getting dim dimXResult: %d \t dimYResult: %d \t dimZResult: %d \n", dimX, dimY, dimZ);	
 	Point origin = {0,0,0};
 
 	double ref_x_min, ref_x_max, ref_y_min, ref_y_max, ref_z_min, ref_z_max;
@@ -125,18 +126,18 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 		p2x_2 = UTransform(ref_x_max,ref_y_max,ref_z_min,U);
 		p3x_2 = UTransform(ref_x_max,ref_y_min,ref_z_max,U);
 
-		// printf("%22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f\n",ref_x_min,ref_x_max,ref_y_min,ref_y_max,ref_z_min,ref_z_max);
-		// printf("%22.15f \t %22.15f \t %22.15f\n",p1x_1.x, p1x_1.y,p1x_1.z);
-		// printf("%22.15f \t %22.15f \t %22.15f\n",p2x_1.x, p2x_1.y,p2x_1.z);
-		// printf("%22.15f \t %22.15f \t %22.15f\n",p3x_1.x, p3x_1.y,p3x_1.z);
-		// printf("%22.15f \t %22.15f \t %22.15f\n",p1x_2.x, p1x_2.y,p1x_2.z);
-		// printf("%22.15f \t %22.15f \t %22.15f\n",p2x_2.x, p2x_2.y,p2x_2.z);
-		// printf("%22.15f \t %22.15f \t %22.15f\n",p3x_2.x, p3x_2.y,p3x_2.z);
+	//	printf("%22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f\n",ref_x_min,ref_x_max,ref_y_min,ref_y_max,ref_z_min,ref_z_max);
+	//	printf("%22.15f \t %22.15f \t %22.15f\n",p1x_1.x, p1x_1.y,p1x_1.z);
+	//	printf("%22.15f \t %22.15f \t %22.15f\n",p2x_1.x, p2x_1.y,p2x_1.z);
+	//	printf("%22.15f \t %22.15f \t %22.15f\n",p3x_1.x, p3x_1.y,p3x_1.z);
+	//	printf("%22.15f \t %22.15f \t %22.15f\n",p1x_2.x, p1x_2.y,p1x_2.z);
+	//	printf("%22.15f \t %22.15f \t %22.15f\n",p2x_2.x, p2x_2.y,p2x_2.z);
+	//	printf("%22.15f \t %22.15f \t %22.15f\n",p3x_2.x, p3x_2.y,p3x_2.z);
 
 		if (CheckPlaneIntersectWithSphere(p1x_1, p2x_1, p3x_1, rCutoff, origin) || CheckPlaneIntersectWithSphere(p1x_2, p2x_2, p3x_2, rCutoff, origin))
 		{
 			dimX += 2;
-			// printf("added dimension to X\n");
+			//printf("added dimension to X\n");
 		}
 		else
 		{
@@ -166,7 +167,7 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 		if (CheckPlaneIntersectWithSphere(p1y_1, p2y_1, p3y_1, rCutoff, origin) || CheckPlaneIntersectWithSphere(p1y_2, p2y_2, p3y_2, rCutoff, origin))
 		{
 			dimY += 2;
-			// printf("added dimension to Y\n");
+			//printf("added dimension to Y\n");
 		}
 		else
 		{
@@ -196,7 +197,7 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 		if (CheckPlaneIntersectWithSphere(p1z_1, p2z_1, p3z_1, rCutoff, origin) || CheckPlaneIntersectWithSphere(p1z_2, p2z_2, p3z_2, rCutoff, origin))
 		{
 			dimZ += 2;
-			// printf("added dimension to Z\n");
+			//printf("added dimension to Z\n");
 		}
 		else
 		{
@@ -207,6 +208,7 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 	*dimXResult = dimX;
 	*dimYResult = dimY;
 	*dimZResult = dimZ;
+	//printf("\n dimXResult: %d \t dimYResult: %d \t dimZResult: %d \n", dimX, dimY, dimZ);
 }
 
 
@@ -477,8 +479,9 @@ void getCentralCoords(const double hx, const double hy, const double hz, const i
 
 	double xStart = -((hx / 2.0) - (hxAcc / 2.0));
 	double xEnd = (hx / 2.0) - (hxAcc / 2.0);
+	printf("\n %f \t %f \n", xStart, xEnd);
 	linspace(xStart, xEnd, ref_x_li, accuracy);
-
+	//printf("%f", ref_x_li);
 	double yStart = -((hy / 2.0) - (hyAcc / 2.0));
 	double yEnd = (hy / 2.0) - (hyAcc / 2.0);
 	linspace(yStart, yEnd, ref_y_li, accuracy);
@@ -527,14 +530,17 @@ void normalizeU(double *U, double *normalizedU)
 	normalizedU[0] = U[0] / norm1;
 	normalizedU[1] = U[1] / norm2;
 	normalizedU[2] = U[2] / norm3;
+	//printf("Lattice vector 1: %f \t %f \t %f \n", normalizedU[0], normalizedU[1], normalizedU[2]);
 
 	normalizedU[3] = U[3] / norm1;
 	normalizedU[4] = U[4] / norm2;
 	normalizedU[5] = U[5] / norm3;
+	//printf("Lattice vector 2: %f \t %f \t %f \n", normalizedU[3], normalizedU[4], normalizedU[5]);
 
 	normalizedU[6] = U[6] / norm1;
 	normalizedU[7] = U[7] / norm2;
 	normalizedU[8] = U[8] / norm3;
+	//printf("Lattice vector 3: %f \t %f \t %f \n", normalizedU[6], normalizedU[7], normalizedU[8]);
 }
 
 int mod(int a, int b)
@@ -889,22 +895,22 @@ void writeMatToFile(const char *filename, const double *data, const int dimX, co
 
 
 
-void getMainParameter_RadialLegendre(const int maxMCSHOrder, const int maxLegendreOrder, const int length, int* LegendreOrderList, int* lList, int* groupList)
+void getMainParameter_RadialLegendre(const int maxMCSHOrder, const int maxLegendreOrder, const int length, int* LegendreOrderList, int* lList)//, int* groupList)
 {
 	// length
 	// int length = getDescriptorListLength(rStepsize, rMaxCutoff, maxOrder)
-	int numGroup = getNumGroup(maxMCSHOrder);
+	// int numGroup = getNumGroup(maxMCSHOrder);
 	int numLegendre = maxLegendreOrder + 1;
 
 	int i, j, index = 0;
 
-	for (i = 0; i < numGroup; i++)
+	for (i = 0; i < maxMCSHOrder+1; i++)
 	{
 		for (j = 0; j < numLegendre; j++)
 		{
 			LegendreOrderList[index] = j;
 			lList[index] = getCurrentLNumber(i);
-			groupList[index] = getCurrentGroupNumber(i);
+			// groupList[index] = getCurrentGroupNumber(i);
 			index++;
 		}
 	}
@@ -913,13 +919,13 @@ void getMainParameter_RadialLegendre(const int maxMCSHOrder, const int maxLegend
 int getDescriptorListLength_RadialLegendre(const int maxLegendreOrder, const int maxMCSHOrder)
 {
 
-	int numGroup = getNumGroup(maxMCSHOrder);
+	// int numGroup = getNumGroup(maxMCSHOrder);
 	// printf("\nnumber groups:%d \n", numGroup);
-
+	int numMCSH = maxMCSHOrder + 1;
 	int numLegendre = maxLegendreOrder + 1;
 	// printf("\nnumber r cutoff:%d \n", numRCutoff);
 
-	return numGroup * numLegendre;
+	return numMCSH * numLegendre;
 
 }
 
@@ -929,22 +935,22 @@ int getDescriptorListLength_RadialLegendre(const int maxLegendreOrder, const int
 
 
 
-void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder, const int length, double* rCutoffList, int* lList, int* groupList)
+void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder, const int length, double* rCutoffList, int* lList)//, int* groupList)
 {
 	// length
 	// int length = getDescriptorListLength(rStepsize, rMaxCutoff, maxMCSHOrder)
-	int numGroup = getNumGroup(maxMCSHOrder);
+	//int numGroup = getNumGroup(maxMCSHOrder);
 	int numRCutoff = getNumRCutoff(rStepsize, rMaxCutoff);
 
 	int i, j, index = 0;
 
-	for (i = 0; i < numGroup; i++)
+	for (i = 0; i < maxMCSHOrder+1; i++)
 	{
 		for (j = 0; j < numRCutoff; j++)
 		{
 			rCutoffList[index] = (j+1) * rStepsize;
 			lList[index] = getCurrentLNumber(i);
-			groupList[index] = getCurrentGroupNumber(i);
+			//groupList[index] = getCurrentGroupNumber(i);
 			index++;
 		}
 	}
@@ -953,13 +959,13 @@ void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutof
 int getDescriptorListLength_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder)
 {
 
-	int numGroup = getNumGroup(maxMCSHOrder);
+	//int numGroup = getNumGroup(maxMCSHOrder);
 	// printf("\nnumber groups:%d \n", numGroup);
-
+	int numMCSH = maxMCSHOrder + 1;	
 	int numRCutoff = getNumRCutoff(rStepsize, rMaxCutoff);
 	// printf("\nnumber r cutoff:%d \n", numRCutoff);
 
-	return numGroup * numRCutoff;
+	return numMCSH * numRCutoff;
 
 }
 
@@ -1035,7 +1041,8 @@ int getCurrentLNumber(const int currentIndex)
 	// 10 --> 4
 	// 11 --> 4
 
-	int resultList[11] = {0,1,2,2,3,3,3,4,4,4,4};
+	//int resultList[11] = {0,1,2,2,3,3,3,4,4,4,4};
+	int resultList[11] = {0,1,2,3,4};
 	return resultList[currentIndex];
 
 
