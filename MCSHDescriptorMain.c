@@ -70,29 +70,29 @@ void taskPartition_RadialLegendre(const int length, const double rCutoff, const 
 
 void taskPartition_RadialRStep(const int length, const double *rCutoffList, const int *lList, const int numParallelComm, int *taskAssignmentList)
 {	
-	// printf("before calc total score\n");
+	printf("before calc total score\n");
 	double totalScore = 0;
 	int i;
 	for (i = 0; i < length; i++)
 	{	
-		// printf("\nrCutoff: %f \t l: %d \t group: %d",rCutoffList[i], lList[i], groupList[i]);
+		printf("\nrCutoff: %f \t l: %d",rCutoffList[i], lList[i]);//, groupList[i]);
 		totalScore += scoreTask(rCutoffList[i], lList[i]);
 		// averageGroupLoad = (totalScore / numParallelComm) + 1;
 	}
 
-	// printf("after calc total score, total score: %f\n", totalScore);
+	printf("after calc total score, total score: %f\n", totalScore);
 
 	double currentTotal = 0, currentRemaindingScore = totalScore;
 	int currentRemaindingComm = numParallelComm, currentComm = 0;
 	double currentTargetScore = currentRemaindingScore/currentRemaindingComm;
 
-	// printf("step -1, currentTotal: %f, currentRemaindingScore: %f, currentRemaindingComm: %d, currentComm: %d, currentTargetScore: %f \n", currentTotal, currentRemaindingScore, currentRemaindingComm, currentComm, currentTargetScore);	
+	printf("step -1, currentTotal: %f, currentRemaindingScore: %f, currentRemaindingComm: %d, currentComm: %d, currentTargetScore: %f \n", currentTotal, currentRemaindingScore, currentRemaindingComm, currentComm, currentTargetScore);	
 	
 	for (i = 0; i < length; i++)
 	{
 		taskAssignmentList[i] = currentComm;
 		currentTotal += scoreTask(rCutoffList[i], lList[i]);
-		// printf("current total: %f\n", currentTotal);
+		printf("current total: %f\n", currentTotal);
 		if (currentTotal >= currentTargetScore )
 		{
 			currentComm++;
@@ -105,10 +105,10 @@ void taskPartition_RadialRStep(const int length, const double *rCutoffList, cons
 			}
 			
 		}
-		// printf("step %d, currentTotal: %f, currentRemaindingScore: %f, currentRemaindingComm: %d, currentComm: %d, currentTargetScore: %f \n", i, currentTotal, currentRemaindingScore, currentRemaindingComm, currentComm, currentTargetScore);
+		printf("step %d, currentTotal: %f, currentRemaindingScore: %f, currentRemaindingComm: %d, currentComm: %d, currentTargetScore: %f \n", i, currentTotal, currentRemaindingScore, currentRemaindingComm, currentComm, currentTargetScore);
 	}
 
-	// printf("assigning task score\n");
+	printf("assigning task score\n");
 
 	return;
 }
@@ -195,21 +195,19 @@ void MCSHDescriptorMain_RadialRStep(const double *rho, const int imageDimX, cons
 
 	MPI_Comm_size(communicator, &numProc);
 	MPI_Comm_rank(communicator, &rank);
-	// printf("start length");
+	printf("start length");
 	int length = getDescriptorListLength_RadialRStep(rStepsize, rMaxCutoff, maxMCSHOrder);
-	// printf("\nlength: %d\n", length);
+	printf("\nlength: %d\n", length);
 	double *rCutoffList = calloc( length, sizeof(double));
 	int *lList = calloc( length, sizeof(int));
-	// int *groupList = calloc( length, sizeof(int));
 
 	getMainParameter_RadialRStep(rStepsize, rMaxCutoff, maxMCSHOrder, length, rCutoffList, lList);
 
-	// int counter;
-	// for (counter = 0; counter < length; counter ++)
-	// {
-	// 	printf("\ni:%d \t order:%d \t group:%d \t r:%.10f", counter, lList[counter], groupList[counter], rCutoffList[counter]);
-	// }
-
+	int counter;
+	for (counter = 0; counter < length; counter ++)
+	{
+	 	printf("\ni:%d \t order:%d \t r:%.10f", counter, lList[counter], rCutoffList[counter]);
+	}
 
 	if (rank == 0)
 	{
@@ -222,7 +220,7 @@ void MCSHDescriptorMain_RadialRStep(const double *rho, const int imageDimX, cons
 		int i;
 		for (i = 0; i < length; i++)
 		{
-			// printf("\n %.5f \t %d \t %d \t %d \t %d\n ",rCutoffList[i], lList[i], groupList[i], taskAssignmentList[i], commIndex);
+			printf("\n %.5f \t %d \t %d \t %d\n ",rCutoffList[i], lList[i], taskAssignmentList[i], commIndex);
 			if (commIndex == taskAssignmentList[i])
 			{
 				// radial type 1: r step
@@ -230,7 +228,6 @@ void MCSHDescriptorMain_RadialRStep(const double *rho, const int imageDimX, cons
 				prepareMCSHFeatureAndSave(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, rCutoffList[i], lList[i], 1, 0, normalizedU, accuracy);
 			}
 		}
-
 		free(taskAssignmentList);
 	}
 

@@ -18,10 +18,8 @@
 //#include "test_data.h"
 //#include "pseudo_dens_CO_60.h"
 //#include "pseudo_dens_CO_90.h"
-#include "pseudo_dens_CO_30.h"
-
-
-
+//#include "pseudo_dens_CO_30.h"
+#include "/home/ssahoo41/Documents/MCSH_codes/generate_images/single_rot_data_0.1_mesh/pseudo_dens_CO_10.h"
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +47,8 @@ int main(int argc, char *argv[])
 	//double *rho = Pt_test;
 	//double *rho = CO_test_60;
 	//double *rho = CO_test_90;
-	double *rho = CO_test_30;
+	//double *rho = CO_test_30;
+	double *rho = CO_test_10;
 	int ii, imageSize = imageDimX * imageDimY * imageDimZ;
 	//double current = 0.0;
 	//for (ii = 0; ii < imageSize; ii++)
@@ -62,16 +61,16 @@ int main(int argc, char *argv[])
 	//double Uvec[9] = {0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0};
 	double Uvec[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 	double *U = Uvec;
-	int accuracy = 2;
+	int accuracy = 6;
 
-	int MCSHMaxOrder = 2;
-	double MCSHMaxR = 2.0;
+	int MCSHMaxOrder = 4;
+	double MCSHMaxR = 1.0;
 	//double MCSHRStepsize = 0.1;
 
 
 	// printf("\nstart MCSH\n");
 	// MCSHDescriptorMain_RadialRStep(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, MCSHMaxOrder, MCSHMaxR, MCSHRStepsize, color, numParallelComm, row_comm);
-	MCSHDescriptorMain_RadialLegendre(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, MCSHMaxR, MCSHMaxOrder, 0, color, numParallelComm, row_comm);
+	MCSHDescriptorMain_RadialLegendre(rho, imageDimX, imageDimY, imageDimZ, hx, hy, hz, U, accuracy, MCSHMaxR, MCSHMaxOrder, 5, color, numParallelComm, row_comm);
 
 	double end = MPI_Wtime();
 	printf("\n\n END execution time %10f\n\n", end - start);

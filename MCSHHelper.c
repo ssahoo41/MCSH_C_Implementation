@@ -435,9 +435,6 @@ double sumAbsArr(const double *arr, const int size)
 
 }
 
-
-
-
 void linspace(double start, double end, double *result, int num)
 {	
 	double stepsize = (end - start) / (double)(num-1);
@@ -457,7 +454,7 @@ void meshgrid3D(const double *x, const double *y, const double *z, const int siz
 	
 	for (k = 0; k < sizez; k++){
 		for ( j = 0; j < sizey; j++) {
-			for ( i = 0; i < sizey; i++) {
+			for ( i = 0; i < sizex; i++) {
 				X[ k * sizex * sizey + j * sizex + i ] = x[i];
 				Y[ k * sizex * sizey + j * sizex + i ] = y[j];
 				Z[ k * sizex * sizey + j * sizex + i ] = z[k];
@@ -931,10 +928,6 @@ int getDescriptorListLength_RadialLegendre(const int maxLegendreOrder, const int
 
 
 
-
-
-
-
 void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutoff, const int maxMCSHOrder, const int length, double* rCutoffList, int* lList)//, int* groupList)
 {
 	// length
@@ -950,7 +943,6 @@ void getMainParameter_RadialRStep(const double rStepsize, const double rMaxCutof
 		{
 			rCutoffList[index] = (j+1) * rStepsize;
 			lList[index] = getCurrentLNumber(i);
-			//groupList[index] = getCurrentGroupNumber(i);
 			index++;
 		}
 	}

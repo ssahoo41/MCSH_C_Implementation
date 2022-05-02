@@ -985,9 +985,7 @@ double scoreTask(const double rCutoff, const int l)//, const int group)
 		case 3:
 			result = 10;
 			break;
-
-
-
+			
 		case 4:
 			result = 15;
 			break;
