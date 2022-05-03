@@ -587,9 +587,9 @@ void calcStencilAndConvolveAndAddResult(const double *image, const int imageDimX
 					 rCutoff, l, n, radialFunctionType, radialFunctionOrder, U, accuracy, stencil);
 
 
-	//char stencilFilename[128];
-	//snprintf(stencilFilename, 128, "stencil_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
-	//writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
+	char stencilFilename[128];
+	snprintf(stencilFilename, 128, "stencil_%f_%d_%s_Type%d_%d.csv", rCutoff, l, n, radialFunctionType, radialFunctionOrder);
+	writeMatToFile(stencilFilename, stencil, stencilDimX, stencilDimY, stencilDimZ);
 
 	printf("end stencil calculation \n");
 	//time(&end_stencil_t); 

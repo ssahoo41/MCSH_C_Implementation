@@ -103,7 +103,7 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 	int dimY = 2 * ceil(rCutoff / hy) + 1;
 	int dimZ = 2 * ceil(rCutoff / hz) + 1;
 
-	//printf("\n Before getting dim dimXResult: %d \t dimYResult: %d \t dimZResult: %d \n", dimX, dimY, dimZ);	
+	printf("\n Before getting dim dimXResult: %d \t dimYResult: %d \t dimZResult: %d \n", dimX, dimY, dimZ);	
 	Point origin = {0,0,0};
 
 	double ref_x_min, ref_x_max, ref_y_min, ref_y_max, ref_z_min, ref_z_max;
@@ -126,13 +126,13 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 		p2x_2 = UTransform(ref_x_max,ref_y_max,ref_z_min,U);
 		p3x_2 = UTransform(ref_x_max,ref_y_min,ref_z_max,U);
 
-	//	printf("%22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f\n",ref_x_min,ref_x_max,ref_y_min,ref_y_max,ref_z_min,ref_z_max);
-	//	printf("%22.15f \t %22.15f \t %22.15f\n",p1x_1.x, p1x_1.y,p1x_1.z);
-	//	printf("%22.15f \t %22.15f \t %22.15f\n",p2x_1.x, p2x_1.y,p2x_1.z);
-	//	printf("%22.15f \t %22.15f \t %22.15f\n",p3x_1.x, p3x_1.y,p3x_1.z);
-	//	printf("%22.15f \t %22.15f \t %22.15f\n",p1x_2.x, p1x_2.y,p1x_2.z);
-	//	printf("%22.15f \t %22.15f \t %22.15f\n",p2x_2.x, p2x_2.y,p2x_2.z);
-	//	printf("%22.15f \t %22.15f \t %22.15f\n",p3x_2.x, p3x_2.y,p3x_2.z);
+		printf("%22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f \t %22.15f\n",ref_x_min,ref_x_max,ref_y_min,ref_y_max,ref_z_min,ref_z_max);
+		printf("%22.15f \t %22.15f \t %22.15f\n",p1x_1.x, p1x_1.y,p1x_1.z);
+		printf("%22.15f \t %22.15f \t %22.15f\n",p2x_1.x, p2x_1.y,p2x_1.z);
+		printf("%22.15f \t %22.15f \t %22.15f\n",p3x_1.x, p3x_1.y,p3x_1.z);
+		printf("%22.15f \t %22.15f \t %22.15f\n",p1x_2.x, p1x_2.y,p1x_2.z);
+		printf("%22.15f \t %22.15f \t %22.15f\n",p2x_2.x, p2x_2.y,p2x_2.z);
+		printf("%22.15f \t %22.15f \t %22.15f\n",p3x_2.x, p3x_2.y,p3x_2.z);
 
 		if (CheckPlaneIntersectWithSphere(p1x_1, p2x_1, p3x_1, rCutoff, origin) || CheckPlaneIntersectWithSphere(p1x_2, p2x_2, p3x_2, rCutoff, origin))
 		{
@@ -208,7 +208,7 @@ void GetDimensionsPlane(const double hx, const double hy, const double hz, const
 	*dimXResult = dimX;
 	*dimYResult = dimY;
 	*dimZResult = dimZ;
-	//printf("\n dimXResult: %d \t dimYResult: %d \t dimZResult: %d \n", dimX, dimY, dimZ);
+	printf("\n dimXResult: %d \t dimYResult: %d \t dimZResult: %d \n", dimX, dimY, dimZ);
 }
 
 
@@ -830,22 +830,18 @@ void convolve5(const double *image, const double *stencil, const int imageDimX, 
 			for ( i = 0; i < imageDimX; i++) {
 				currentPixelValue = 0.0;
 
-				stencilIndex = 0;
-				// for (n = 0, zShift = - stencilCenterZ; n < stencilDimZ; n++, zShift++){
+				stencilIndex = stencilSize - 1;
 				for (n = stencilDimZ, zShift = - stencilCenterZ; n--; zShift++){
 					outK = mod ((k - zShift), imageDimZ);
 					outKpart = outK * imageXYDim;
-					// for ( m = 0, yShift = - stencilCenterY; m < stencilDimY; m++, yShift++) {
 					for ( m = stencilDimY, yShift = - stencilCenterY; m--; yShift++) {
 						outJ = mod ((j - yShift), imageDimY);
 						outJKpart = outJ * imageDimX + outKpart;
-						// for ( l = 0, xShift = - stencilCenterX; l < stencilDimX; l++, xShift++) {
 						for ( l = stencilDimX,xShift = - stencilCenterX; l--; xShift++ ) {
 							outI = mod ((i - xShift), imageDimX);
-							// printf("%d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \n",i,j,k,l,m,n,xShift, yShift,zShift,outI,outJ,outK);
-							
-							// imageIndex = outK * imageDimX * imageDimY + outJ * imageDimX + outI;
+							// printf("%d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \t\t %d \t %d \t %d \n",i,j,k,l,m,n,xShift, yShift,zShift,outI,outJ,outK);	
 							imageIndex = outJKpart + outI;
+							printf("%d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d\n", i, j, k, outI, outJ, outK, xShift, yShift, zShift, imageIndex, l, m, n, stencilIndex);
 							// nothing: 0.665
 							// currentPixelValue = stencil[stencilIndex]* image[imageIndex];
 							currentPixelValue += stencil[stencilIndex]* image[imageIndex]; // 5.64s
@@ -853,7 +849,7 @@ void convolve5(const double *image, const double *stencil, const int imageDimX, 
 							// currentPixelValue += 1.0; // 5.185 s
 							// accessing image[imageIndex] is slower
 
-							stencilIndex++;
+							stencilIndex--;
 						}
 					}
 				}

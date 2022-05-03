@@ -19,7 +19,7 @@
 //#include "pseudo_dens_CO_60.h"
 //#include "pseudo_dens_CO_90.h"
 //#include "pseudo_dens_CO_30.h"
-#include "/home/ssahoo41/Documents/MCSH_codes/generate_images/single_rot_data_0.1_mesh/pseudo_dens_CO_10.h"
+#include "/home/ssahoo41/Documents/MCSH_codes/generate_images/pseudo_dens_O2_10.h"
 
 int main(int argc, char *argv[])
 {
@@ -42,13 +42,14 @@ int main(int argc, char *argv[])
 
 	int numParallelComm = world_size / numProcPerRow;
 
-	int imageDimX = 101, imageDimY = 101, imageDimZ = 101;
+	//int imageDimX = 101, imageDimY = 101, imageDimZ = 101;
+	int imageDimX = 11, imageDimY = 11, imageDimZ = 11;
 	//double *rho = malloc( imageDimX * imageDimY * imageDimZ * sizeof(double));
 	//double *rho = Pt_test;
 	//double *rho = CO_test_60;
 	//double *rho = CO_test_90;
 	//double *rho = CO_test_30;
-	double *rho = CO_test_10;
+	double *rho = O_test;
 	int ii, imageSize = imageDimX * imageDimY * imageDimZ;
 	//double current = 0.0;
 	//for (ii = 0; ii < imageSize; ii++)
@@ -57,14 +58,14 @@ int main(int argc, char *argv[])
 	//	current += 1.0;
 	//}
 
-	double hx = 0.1, hy = 0.1, hz = 0.1;
+	double hx = 1.0, hy = 1.0, hz = 1.0;
 	//double Uvec[9] = {0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0, 0.707106781186548, 0.707106781186548, 0.707106781186548, 0.0};
 	double Uvec[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 	double *U = Uvec;
-	int accuracy = 6;
+	int accuracy = 2;
 
-	int MCSHMaxOrder = 4;
-	double MCSHMaxR = 1.0;
+	int MCSHMaxOrder = 0;
+	double MCSHMaxR = 2.0;
 	//double MCSHRStepsize = 0.1;
 
 
