@@ -1,0 +1,14 @@
+# Currently, the order of inputs is also important. E.g., placing PSEUDODENSITY above N_TYPES will cause an error. 
+GMP: 1
+N_SIGMA: 3
+N_ANGULAR: 5
+SIGMA: 0.1 0.63 3.98
+CUTOFF: 18.0
+SQUARED: 1
+SOLID: 0
+N_TYPES: 1
+# For Multiple element systems, it is important to order the element identity, pseudodensities, and number of primitives identically
+ELEMENTS: 13
+PSEUDODENSITY: Al_pseudodensity_4.g
+N_PRIMITIVES: 4
+MAX_PRIMITIVES: 4

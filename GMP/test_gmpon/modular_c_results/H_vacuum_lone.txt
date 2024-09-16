@@ -1,0 +1,24 @@
+sparc_mlff_interface_firstMD
+Initializing nlist ... 
+Initialization of nlist done.
+Building nlist ... 
+Building nlist done. 
+Initializing GMPObj. 
+GMPObj initializedBuilding soapxx ... 
+num neighbors 0
+Building soap donexx. 
+0,0: 1.080653
+0,1: 0.016027
+0,2: 0.000001
+0,3: 0.000000
+0,4: 0.000000
+0,5: 0.000000
+0,6: 3.076262
+0,7: 0.016762
+0,8: 0.000000
+0,9: 0.000000
+0,10: 0.000000
+0,11: 0.000000
+0,12: 367.484472
+0,13: 0.978202
+0,14: 0.000321
